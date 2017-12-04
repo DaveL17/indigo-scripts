@@ -1,9 +1,28 @@
 #! /usr/bin/env python2.6
 # -*- coding: utf-8 -*-
 
+""""
+A script for creating animated graphics based on the ImageMagick library.
+
+The script below is more of a proof of concept or a how-to. If you know Python,
+it is easy to adapt it for use with Indigo. Note that this script requires
+ImageMagick to be installed on the server machine. ImageMagick is not a part
+of the base Python installation.
+
+https://wiki.python.org/moin/ImageMagick
+
+To install ImageMagick:
+    If you have pip installed:
+        > sudo pip install ImageMagick
+
+    If you don't have pip installed:
+        > sudo easy_install pip
+        > sudo pip install ImageMagick
+
+"""
+
 import subprocess
 
-# Note that this script requires ImageMagick to be installed on the server machine
 output_fldr = "/Library/Application\ Support/Perceptive\ Automation/Indigo\ 6/IndigoWebServer/images/controls/static/"  # Spaces must be escaped
 work_fldr = "/Users/username/Desktop/"
 
