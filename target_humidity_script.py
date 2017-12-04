@@ -13,6 +13,8 @@ Temp         Humidity
   0            25%
 -10            20%
 -20            15%
+
+The target humidity should never be above 45% or below 15%.
 """
 
 current_humidity = indigo.devices[281604201].states["sensorValue"]
