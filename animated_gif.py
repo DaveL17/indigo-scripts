@@ -10,37 +10,28 @@ ImageMagick to be installed on the server machine. ImageMagick is not a part
 of the base Python installation.
 
 https://wiki.python.org/moin/ImageMagick
-
-To install ImageMagick:
-    If you have pip installed:
-        > sudo pip install ImageMagick
-
-    If you don't have pip installed:
-        > sudo easy_install pip
-        > sudo pip install ImageMagick
-
 """
 
 import subprocess
 
-output_fldr = "/Library/Application\ Support/Perceptive\ Automation/Indigo\ 6/IndigoWebServer/images/controls/static/"  # Spaces must be escaped
-work_fldr = "/Users/username/Desktop/"
+work_fldr = "/Library/Application\ Support/Perceptive\ Automation/Indigo\ 7/IndigoWebServer/images/controls/static/"  # Spaces must be escaped
 
-text_list = ['Upstairs Thermostat: 70°', 'Downstairs Thermostat: 68°', 'Outside Temperature: 68°', 'Server Uptime: 7 days, 12:38 [20:45]']
+text_list = ['Upstairs Thermostat: 70°', 'Downstairs Thermostat: 68°', 'Outside Temperature: 68°', 'Uptime: 7 days, 12:38 [20:45]']
 
 # First part of the output command string
-output_cmd = "/opt/local/bin/convert -delay 400 -size 500x100 "
+output_cmd = "/opt/local/bin/convert -delay 400 -size 200x27 "
 
 # Iterate through the items in the text list
 for num in range(1, len(text_list) + 1):
     # Create a frame image based on the text list item and enumerate the filename
-    proc = subprocess.Popen("/opt/local/bin/convert {0}bar.png -font arial -fill white -pointsize 16 -annotate +40+55 '{1}' bar_frame{2}.gif".format(work_fldr, text_list[num - 1], num),
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    proc = subprocess.Popen("/opt/local/bin/convert {0}bar.png -font arial -fill black -pointsize 12 -annotate +10+17 '{1}' {0}bar_frame{2}.gif".format(work_fldr, text_list[num - 1], num), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    # print(proc.communicate())
 
     # Add command to the output command string for the new frame
     output_cmd += "-page +0+0 {0}bar_frame{1}.gif ".format(work_fldr, num)
 
 # The last part of the output command string
-output_cmd += "-loop 0 {0}bar_animation.gif".format(output_fldr)
+output_cmd += "-loop 0 {0}bar_animation.gif".format(work_fldr)
 
-proc = subprocess.Popen(output_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+proc1 = subprocess.Popen(output_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+# print(proc1.communicate())
