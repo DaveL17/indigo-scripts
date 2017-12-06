@@ -10,7 +10,6 @@ except ImportError, e:
 
 # =================== User Settings ===================
 output_file = '/Library/Application Support/Perceptive Automation/Indigo 7/IndigoWebServer/images/controls/static/battery_test.png'  # Indigo 7 installs
-# output_file = '/Library/Application Support/Perceptive Automation/Indigo 6/IndigoWebServer/images/controls/static/battery_test.png'  # Indigo 6 installs
 
 chart_title = 'Battery Health'
 x_axis_title = ''
@@ -71,7 +70,7 @@ device_dict = {}
 x_values = []
 y_values = []
 
-# Create a dict of battery powered devices and their battery levels
+# Create a dictionary of battery powered devices and their battery levels
 try:
     for dev in indigo.devices.itervalues():
         if dev.batteryLevel is not None:
@@ -83,34 +82,37 @@ try:
 except Exception, e:
     indigo.server.log(u"Error reading battery devices: %s" % e)
 
-# Parse the battery device dict into X and Y values
+# Parse the battery device dictionary for plotting.
 try:
     for key, value in sorted(device_dict.iteritems(), reverse=True):
         try:
             x_values.append(float(value))
-        except:
+        except ValueError:
             x_values.append(0)
         y_values.append(key.replace(' - ', '\n'))  # This line is specific to my install, as I name devices "Room - Device Name"
 
         # Create a list of colors for the bars based on battery health
         try:
             battery_level = float(value)
-        except:
+        except ValueError:
             battery_level = 0
+
         if battery_level <= battery_low_level:
             bar_colors.append(battery_low_color)
         elif battery_low_level < battery_level <= battery_caution_level:
             bar_colors.append(battery_caution_color)
         else:
             bar_colors.append(battery_full_color)
-except Exception, e:
-    indigo.server.log(u"Error parsing chart data: %s" % e)
 
-# Create a list of values to plot on the Y axis, since we can't plot on device names.
+except Exception, e:
+    indigo.server.log(u"Error parsing chart data: {0}".format(e))
+
+# Create a range of values to plot on the Y axis, since we can't plot on device names.
 y_axis = np.arange(len(y_values))
 
 # Plot the figure
 plt.figure(figsize=(chart_width, chart_height))
+
 # Adding 1 to the y_axis pushes the bar to spot 1 instead of spot 0 -- getting it off the axis.
 plt.barh((y_axis + 1), x_values, color=bar_colors, **k_bar_fig)
 
