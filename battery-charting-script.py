@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.6
+#! /usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
 try:
@@ -9,7 +9,8 @@ except ImportError, e:
     sys.exit(u"The matplotlib and numpy modules are required to use this script.")
 
 # =================== User Settings ===================
-output_file = '/Library/Application Support/Perceptive Automation/Indigo 7/IndigoWebServer/images/controls/static/battery_test.png'  # Indigo 7 installs
+fldr = indigo.server.getInstallFolderPath()
+output_file = fldr + '/IndigoWebServer/images/controls/static/battery_test.png'
 
 chart_title = 'Battery Health'
 x_axis_title = ''
@@ -80,7 +81,7 @@ try:
         device_dict['No Battery Devices'] = 0
 
 except Exception, e:
-    indigo.server.log(u"Error reading battery devices: %s" % e)
+    indigo.server.log(u"Error reading battery devices: {0}".format(e))
 
 # Parse the battery device dictionary for plotting.
 try:
