@@ -151,4 +151,5 @@ ax.zaxis.set_pane_color((1, 1, 1, 1))
 # ani = animation.FuncAnimation(fig, animate, frames=1500, interval=24, repeat=True)
 # ani.save('/Users/Dave/Temp/anim_24_1500_60fps.mp4')
 
-plt.show()
+# plt.show()
+plt.savefig('/Users/Dave/Temp/Figure 1 Planar.png')

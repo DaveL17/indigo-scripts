@@ -113,4 +113,5 @@ ax.set_zticklabels(['Bsmt', '1st', '2nd', 'Attic'])
 # ani = animation.FuncAnimation(fig, animate, frames=1500, interval=24, repeat=True)
 # ani.save('/Users/Dave/Temp/anim_24_1500_60fps_planar.mp4')
 
-plt.show()
+# plt.show()
+plt.savefig('/Users/Dave/Temp/Figure 1.png')
