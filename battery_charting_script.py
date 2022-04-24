@@ -1,69 +1,78 @@
-#! /usr/bin/env python2.7
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+"""
+Generate a battery health chart for display in Indigo control pages
+"""
+from datetime import datetime
 
 try:
     import sys
     import matplotlib.pyplot as plt
     import numpy as np
-except ImportError, e:
-    sys.exit(u"The matplotlib and numpy modules are required to use this script.")
+except ImportError as e:
+    sys.exit("The matplotlib and numpy modules are required to use this script.")
 
 # =================== User Settings ===================
-fldr = indigo.server.getInstallFolderPath()
-output_file = fldr + '/IndigoWebServer/images/controls/static/battery_test.png'
+output_file = indigo.server.getInstallFolderPath() + '/Web Assets/images/controls/static/battery_test.png'  # Indigo 2022.1 installs
+today = datetime.now()
 
-chart_title = 'Battery Health'
-x_axis_title = ''
-y_axis_title = ''
+chart_title = 'Battery Health as of ' + today.strftime("%A %I:%M %p")
 
-background_color = '#000000'
-chart_height = 4.5
-chart_width = 6
-font_color = '#FFFFFF'
-font_name = 'Lato Light'
-font_size = 9
-grid_color = '#888888'
-grid_style = 'dotted'
-show_data_labels = True
-title_font_size = 9
-
-battery_full_color = '#0000CC'
-battery_caution_color = '#FFFF00'
-battery_low_color = '#FF0000'
-battery_caution_level = 10
-battery_low_level = 5
+BACKGROUND_COLOR = '#000000'
+BATTERY_CAUTION_COLOR = '#FFFF00'
+BATTERY_CAUTION_LEVEL = 20
+BATTERY_FULL_COLOR = '#0000CC'
+BATTERY_LOW_COLOR = '#FF0000'
+BATTERY_LOW_LEVEL = 10
+CHART_HEIGHT = 4.5
+CHART_WIDTH = 6
+FONT_COLOR = '#FFFFFF'
+FONT_NAME = 'Lato Light'
+FONT_SIZE = 9
+GRID_COLOR = '#888888'
+GRID_STYLE = 'dotted'
+SHOW_DATA_LABELS = True
+TITLE_FONT_SIZE = 9
+X_AXIS_TITLE = ''
+Y_AXIS_TITLE = ''
 
 # =================== kwarg Settings ===================
-k_bar_fig = {'align': 'center',
-             'alpha': 1.0,
-             'height': 0.5,
-             'zorder': 3
-             }
+k_bar_fig = {
+    'align': 'center',
+    'alpha': 1.0,
+    'height': 0.5,
+    'zorder': 3
+}
 
-k_grid_fig = {'which': 'major',
-              'color': grid_color,
-              'linestyle': grid_style,
-              'zorder': 0
-              }
+k_grid_fig = {
+    'which': 'major',
+    'color': GRID_COLOR,
+    'linestyle': GRID_STYLE,
+    'zorder': 0
+}
 
-k_plot_fig = {'bbox_extra_artists': None,
-              'bbox_inches': 'tight',
-              'dpi': 100,
-              'edgecolor': background_color,
-              'facecolor': background_color,
-              'format': None,
-              'frameon': None,
-              'orientation': None,
-              'pad_inches': 0.1,
-              'papertype': None,
-              'transparent': True,
-              }
+k_plot_fig = {
+    'bbox_extra_artists': None,
+    'bbox_inches': 'tight',
+    'dpi': 100,
+    'edgecolor': BACKGROUND_COLOR,
+    'facecolor': BACKGROUND_COLOR,
+    'format': None,
+    'frameon': None,
+    'orientation': None,
+    'pad_inches': 0.1,
+    'papertype': None,
+    'transparent': True,
+}
 
-k_title_fig = {'fontname': font_name,
-               'fontsize': title_font_size,
-               'color': font_color,
-               'position': (0.35, 1.0)
-               }
+k_title_fig = {
+    'fontname': FONT_NAME,
+    'fontsize': TITLE_FONT_SIZE,
+    'color': FONT_COLOR,
+    'position': (0.35, 1.0)
+}
+
 # =====================================================
 
 bar_colors = []
@@ -77,15 +86,15 @@ try:
         if dev.batteryLevel is not None:
             device_dict[dev.name] = dev.states['batteryLevel']
 
-    if device_dict == {}:
+    if not device_dict:
         device_dict['No Battery Devices'] = 0
 
-except Exception, e:
-    indigo.server.log(u"Error reading battery devices: {0}".format(e))
+except Exception as e:
+    indigo.server.log(f"Error reading battery devices: {e}")
 
 # Parse the battery device dictionary for plotting.
 try:
-    for key, value in sorted(device_dict.iteritems(), reverse=True):
+    for key, value in sorted(device_dict.items(), key=lambda x: x[1], reverse=True):
         try:
             x_values.append(float(value))
         except ValueError:
@@ -98,44 +107,45 @@ try:
         except ValueError:
             battery_level = 0
 
-        if battery_level <= battery_low_level:
-            bar_colors.append(battery_low_color)
-        elif battery_low_level < battery_level <= battery_caution_level:
-            bar_colors.append(battery_caution_color)
+        if battery_level <= BATTERY_LOW_LEVEL:
+            bar_colors.append(BATTERY_LOW_COLOR)
+        elif BATTERY_LOW_LEVEL < battery_level <= BATTERY_CAUTION_LEVEL:
+            bar_colors.append(BATTERY_CAUTION_COLOR)
         else:
-            bar_colors.append(battery_full_color)
+            bar_colors.append(BATTERY_FULL_COLOR)
 
-except Exception, e:
-    indigo.server.log(u"Error parsing chart data: {0}".format(e))
+except Exception as e:
+    indigo.server.log(f"Error parsing chart data: {e}")
 
 # Create a range of values to plot on the Y axis, since we can't plot on device names.
 y_axis = np.arange(len(y_values))
 
 # Plot the figure
-plt.figure(figsize=(chart_width, chart_height))
+plt.figure(figsize=(CHART_WIDTH, CHART_HEIGHT))
 
 # Adding 1 to the y_axis pushes the bar to spot 1 instead of spot 0 -- getting it off the axis.
 plt.barh((y_axis + 1), x_values, color=bar_colors, **k_bar_fig)
 
-if show_data_labels:
+if SHOW_DATA_LABELS:
     for ii in range(len(y_axis)):
-        plt.annotate("%3d" % x_values[ii], xy=((x_values[ii] - 5), (y_axis[ii]) + 0.88), xycoords='data', textcoords='data', fontsize=font_size, color=font_color)
+        plt.annotate(f"{x_values[ii]:3d}", xy=((x_values[ii] - 5), (y_axis[ii]) + 0.88),
+                     xycoords='data', textcoords='data', fontsize=FONT_SIZE, color=FONT_COLOR)
 
 # Chart
 plt.title(chart_title, **k_title_fig)
 plt.grid(**k_grid_fig)
 
 # X Axis
-plt.xticks(fontsize=font_size, color=font_color)
-plt.xlabel(x_axis_title, fontsize=font_size, color=font_color)
+plt.xticks(fontsize=FONT_SIZE, color=FONT_COLOR)
+plt.xlabel(X_AXIS_TITLE, fontsize=FONT_SIZE, color=FONT_COLOR)
 plt.gca().xaxis.grid(True)
 plt.xlim(xmin=0, xmax=100)
 
 # Y Axis
-# The addition of 0.05 to the y_axis better centers the labels on the bars
-# (for 2-line labels.) For 1 line labels, change 1.05 to 1.0.
-plt.yticks((y_axis + 1.05), y_values, fontsize=font_size, color=font_color)
-plt.ylabel(y_axis_title, fontsize=font_size, color=font_color)
+# The addition of 0.05 to the y_axis better centers the labels on the bars (for 2-line labels.) For
+# 1 line labels, change 1.05 to 1.0.
+plt.yticks((y_axis + 1.05), y_values, fontsize=FONT_SIZE, color=FONT_COLOR)
+plt.ylabel(Y_AXIS_TITLE, fontsize=FONT_SIZE, color=FONT_COLOR)
 plt.gca().yaxis.grid(False)
 plt.ylim(ymin=0)
 
