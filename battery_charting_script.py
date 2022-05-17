@@ -128,7 +128,7 @@ plt.barh((y_axis + 1), x_values, color=bar_colors, **k_bar_fig)
 
 if SHOW_DATA_LABELS:
     for ii in range(len(y_axis)):
-        plt.annotate(f"{x_values[ii]:3d}", xy=((x_values[ii] - 5), (y_axis[ii]) + 0.88),
+        plt.annotate(f"{x_values[ii]:3}", xy=((x_values[ii] - 5), (y_axis[ii]) + 0.88),
                      xycoords='data', textcoords='data', fontsize=FONT_SIZE, color=FONT_COLOR)
 
 # Chart
