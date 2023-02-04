@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.6
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """"
@@ -16,10 +16,9 @@ https://wiki.python.org/moin/ImageMagick
 import subprocess
 
 # Where the image will reside.  Spaces must be escaped.
-work_fldr = "/Library/Application\ Support/Perceptive\ Automation/Indigo\ 7/IndigoWebServer/images/controls/static/"
+work_fldr = "/Library/Application Support/Perceptive Automation/Indigo 2022.1/Web Assets/images/controls/static"
 
-# Change this list to device states, variable values, etc. Can be string, int,
-# float, etc.
+# Change this list to device states, variable values, etc. Can be string, int, float, etc.
 text_list = ["Upstairs Thermostat: 70°", "Downstairs Thermostat: 68°", "Outside Temperature: 68°", "Up Time: 7 days, 12:38 [20:45]", 1.23]
 
 # First part of the output command string
