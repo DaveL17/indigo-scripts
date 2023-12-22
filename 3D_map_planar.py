@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -12,11 +12,11 @@ Note: this script requires Python 3.x
 from matplotlib.patches import Rectangle  # PathPatch
 # from matplotlib.text import TextPath
 # from matplotlib.transforms import Affine2D
-import mpl_toolkits.mplot3d.art3d as art3d
+from mpl_toolkits.mplot3d import art3d
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
-from matplotlib import animation
-import sys
+# from matplotlib import animation
+# import sys
 
 
 # ==============================================================================

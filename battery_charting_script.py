@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -6,18 +6,21 @@ Generate a battery health chart for display in Indigo control pages
 """
 from datetime import datetime
 
+import sys
 try:
-    import sys
     import matplotlib.pyplot as plt
     import numpy as np
+    import indigo
 except ImportError as e:
     sys.exit("The matplotlib and numpy modules are required to use this script.")
 
+IMAGES_FILE_PATH = "/Web Assets/images/controls/static/battery_test.png"
+
 # =================== User Settings ===================
-output_file = indigo.server.getInstallFolderPath() + '/Web Assets/images/controls/static/battery_test.png'  # Indigo 2022.1 installs
+output_file = indigo.server.getInstallFolderPath() + IMAGES_FILE_PATH
 today = datetime.now()
 
-chart_title = 'Battery Health as of ' + today.strftime("%A %I:%M %p")
+chart_title = f"Battery Health as of {today.strftime('%A %I:%M %p')}"
 
 BACKGROUND_COLOR = '#000000'
 BATTERY_CAUTION_COLOR = '#FFFF00'
@@ -99,7 +102,9 @@ try:
             x_values.append(float(value))
         except ValueError:
             x_values.append(0)
-        y_values.append(key.replace(' - ', '\n'))  # This line is specific to my install, as I name devices "Room - Device Name"
+
+        # This line is specific to my install, as I name devices "Room - Device Name"
+        y_values.append(key.replace(' - ', '\n'))
 
         # Create a list of colors for the bars based on battery health
         try:
@@ -142,8 +147,8 @@ plt.gca().xaxis.grid(True)
 plt.xlim(xmin=0, xmax=100)
 
 # Y Axis
-# The addition of 0.05 to the y_axis better centers the labels on the bars (for 2-line labels.) For
-# 1 line labels, change 1.05 to 1.0.
+# The addition of 0.05 to the y_axis better centers the labels on the bars (for 2-line labels.) For 1 line labels,
+# change 1.05 to 1.0.
 plt.yticks((y_axis + 1.05), y_values, fontsize=FONT_SIZE, color=FONT_COLOR)
 plt.ylabel(Y_AXIS_TITLE, fontsize=FONT_SIZE, color=FONT_COLOR)
 plt.gca().yaxis.grid(False)

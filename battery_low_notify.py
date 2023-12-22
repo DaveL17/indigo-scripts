@@ -1,16 +1,15 @@
 """
 Simple script to notify of devices with low battery levels.
 
-In order for the script to function, you must replace the numbers  `123` with the applicable
-Indigo variable IDs. Alternatively, you can simply set `target_level` to any integer between 0 - 100 and email
-address to a valid email string.
+In order for the script to function, you must replace the numbers `123` with the applicable Indigo variable IDs.
+Alternatively, you can simply set `target_level` to any integer between 0 - 100 and email address to a valid email
+string.
 """
 
 try:
-    import indigo
+    import indigo  # noqa
 except ImportError:
     ...
-
 
 target_level = int(indigo.variables[123].value)  # 123 = Indigo variable ID or integer between 0-100
 email_address = indigo.variables[123].value  # 123 = Indigo variable ID or email string

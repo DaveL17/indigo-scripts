@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -7,12 +7,12 @@
 Note: this script requires Python 3.x and, if saving animation to disk, ffmpeg.
 """
 
+# import sys  # uncomment if using the sys.argv statement below
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.colors import Normalize
-from matplotlib import animation
-import sys
+# from matplotlib import animation  # uncomment if using the animation code below
 
 
 # ==============================================================================
@@ -67,8 +67,7 @@ def plot_shape(coords, obs):
     faces = Poly3DCollection(edges, lw=.3, ec='k', fc=cmap(norm(obs)), alpha=.2)
     ax.add_collection3d(faces)
 
-    # Plot the points themselves to force the scaling of the axes. We set their
-    # size to zero so they aren't visible.
+    # Plot the points themselves to force the scaling of the axes. We set their size to zero so they are invisible.
     ax.scatter(points[:, 0], points[:, 1], points[:, 2], s=0)
 
     ax.set_aspect('auto')
