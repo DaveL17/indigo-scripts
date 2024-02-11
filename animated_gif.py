@@ -37,9 +37,9 @@ OUTPUT_CMD = "/opt/local/bin/convert -delay 300 -size 200x27 "
 for num in range(1, len(text_list) + 1):
     # Build each frame image +h+v
     with subprocess.Popen(f"/opt/local/bin/convert {work_fldr}bar.png -font arial -fill black -pointsize 12 "
-                            f"-annotate +10+17 '{ text_list[num - 1]}' {work_fldr}bar_frame{num}.gif",
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-                            ) as proc:
+                          f"-annotate +10+17 '{ text_list[num - 1]}' {work_fldr}bar_frame{num}.gif",
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+                          ) as proc:
 
         # For debugging, you can look at the shell's return.
         print(proc.communicate())
