@@ -1,2 +1,3 @@
 - 2023-12-21 - code cleanup.
 - 2023-02-04 - adds `battery_low_notify.py` script.
+- 2024-02-11 - minor tweaks.

@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-3D Map v1.0
+3D Map v1.1
+
+Creates a 3D polygon chart. THe example code creates a map of a home and shows how you can color the polygons for
+temperature or humidity using a color map.
 
 Note: this script requires Python 3.x and, if saving animation to disk, ffmpeg.
 """
@@ -67,7 +70,7 @@ def plot_shape(coords, obs):
     faces = Poly3DCollection(edges, lw=.3, ec='k', fc=cmap(norm(obs)), alpha=.2)
     ax.add_collection3d(faces)
 
-    # Plot the points themselves to force the scaling of the axes. We set their size to zero so they are invisible.
+    # Plot the points themselves to force the scaling of the axes. We set their size to zero, so they are invisible.
     ax.scatter(points[:, 0], points[:, 1], points[:, 2], s=0)
 
     ax.set_aspect('auto')
