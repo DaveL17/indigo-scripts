@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-3D Map v1.1
+3D Map v1.2
 
 Creates a 3D polygon chart. THe example code creates a map of a home and shows how you can color the polygons for
 temperature or humidity using a color map.
