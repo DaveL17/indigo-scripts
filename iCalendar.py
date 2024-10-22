@@ -39,6 +39,7 @@ Subscribe to Calendars https://support.apple.com/guide/calenda ... cl1022/mac
 
 
 from datetime import datetime
+import indigo  # noqa
 
 # A valid web server location and a data source object
 ICS_FILE_LOC = f"{indigo.server.getInstallFolderPath()}/Web Assets/public/davecal.ics"

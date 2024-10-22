@@ -85,7 +85,7 @@ y_values = []
 
 # Create a dictionary of battery powered devices and their battery levels
 try:
-    for dev in indigo.devices.itervalues():
+    for dev in indigo.devices.iter():
         if dev.batteryLevel is not None:
             device_dict[dev.name] = dev.states['batteryLevel']
 

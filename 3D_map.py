@@ -47,10 +47,11 @@ def plot_shape(coords, obs):
     points = []
     points += definition_array
 
-    vectors = [definition_array[1] - definition_array[0],
-               definition_array[2] - definition_array[0],
-               definition_array[3] - definition_array[0]
-               ]
+    vectors = [
+        definition_array[1] - definition_array[0],
+        definition_array[2] - definition_array[0],
+        definition_array[3] - definition_array[0]
+    ]
 
     points += [definition_array[0] + vectors[0] + vectors[1]]
     points += [definition_array[0] + vectors[0] + vectors[2]]
@@ -59,13 +60,14 @@ def plot_shape(coords, obs):
 
     points = np.array(points)
 
-    edges = [[points[0], points[3], points[5], points[1]],
-             [points[1], points[5], points[7], points[4]],
-             [points[4], points[2], points[6], points[7]],
-             [points[2], points[6], points[3], points[0]],
-             [points[0], points[2], points[4], points[1]],
-             [points[3], points[6], points[7], points[5]]
-             ]
+    edges = [
+        [points[0], points[3], points[5], points[1]],
+        [points[1], points[5], points[7], points[4]],
+        [points[4], points[2], points[6], points[7]],
+        [points[2], points[6], points[3], points[0]],
+        [points[0], points[2], points[4], points[1]],
+        [points[3], points[6], points[7], points[5]]
+    ]
 
     faces = Poly3DCollection(edges, lw=.3, ec='k', fc=cmap(norm(obs)), alpha=.2)
     ax.add_collection3d(faces)
@@ -77,7 +79,6 @@ def plot_shape(coords, obs):
 
 
 # data = sys.argv[1]
-
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 

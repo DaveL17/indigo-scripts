@@ -13,7 +13,7 @@ https://wiki.python.org/moin/ImageMagick
 
 import subprocess
 try:
-    import indigo
+    import indigo  # noqa
 except ImportError:
     pass
 
@@ -22,12 +22,13 @@ IMAGES_FILE_PATH = "/Web Assets/images/controls/static/battery_test.png"
 work_fldr = indigo.server.getInstallFolderPath() + IMAGES_FILE_PATH
 
 # Change this list to device states, variable values, etc. Can be string, int, float, etc.
-text_list = ["Upstairs Thermostat: 70°",
-             "Downstairs Thermostat: 68°",
-             "Outside Temperature: 68°",
-             "Up Time: 7 days, 12:38 [20:45]",
-             1.23
-             ]
+text_list = [
+    "Upstairs Thermostat: 70°",
+    "Downstairs Thermostat: 68°",
+    "Outside Temperature: 68°",
+    "Up Time: 7 days, 12:38 [20:45]",
+    1.23
+]
 
 # First part of the output command string
 OUTPUT_CMD = "/opt/local/bin/convert -delay 300 -size 200x27 "
