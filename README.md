@@ -1,5 +1,5 @@
 # indigo-scripts
-Miscellaneous scripts for Indigo Home Control Server
+Miscellaneous scripts for the Indigo Smart Home Software platform.
 
 To use a script, click on the link above for the script that you want to use, block and copy and paste it into your
 editor of choice or into an Indigo scripting window.
