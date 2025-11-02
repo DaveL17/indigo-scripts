@@ -34,7 +34,7 @@ def animate(frame):
 
 # ==============================================================================
 def draw_room(origin, w, h, lvl, obs):
-
+    """PLACEHOLDER"""
     # Draw rectangle
     room = Rectangle(origin, width=w, height=h, color=cmap(norm(obs)), ec='k', lw=.3, alpha=.4)
     ax.add_patch(room)
@@ -53,7 +53,8 @@ ax = fig.gca(projection='3d')
 # lower <---> higher
 # Temperature: bwr (blue, white, red)
 # Humidity: Blues (white, blue)
-cmap = plt.cm.bwr
+# cmap = plt.cm.bwr  # this line is replaced by the following new line
+cmap = plt.get_cmap('bwr')
 norm = Normalize(vmin=50, vmax=80)
 
 # ============================== Room Coordinates ==============================

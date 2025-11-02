@@ -11,7 +11,7 @@ try:
     import matplotlib.pyplot as plt
     import numpy as np
     import indigo
-except ImportError as e:
+except ImportError:
     sys.exit("The matplotlib and numpy modules are required to use this script.")
 
 IMAGES_FILE_PATH = "/Web Assets/images/controls/static/battery_test.png"
@@ -20,7 +20,7 @@ IMAGES_FILE_PATH = "/Web Assets/images/controls/static/battery_test.png"
 output_file = indigo.server.getInstallFolderPath() + IMAGES_FILE_PATH
 today = datetime.now()
 
-chart_title = f"Battery Health as of {today.strftime('%A %I:%M %p')}"
+CHART_TITLE = f"Battery Health as of {today.strftime('%A %I:%M %p')}"
 
 BACKGROUND_COLOR = '#000000'
 BATTERY_CAUTION_COLOR = '#FFFF00'
@@ -137,7 +137,7 @@ if SHOW_DATA_LABELS:
                      xycoords='data', textcoords='data', fontsize=FONT_SIZE, color=FONT_COLOR)
 
 # Chart
-plt.title(chart_title, **k_title_fig)
+plt.title(CHART_TITLE, **k_title_fig)
 plt.grid(**k_grid_fig)
 
 # X Axis

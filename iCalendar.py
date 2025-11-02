@@ -46,7 +46,7 @@ ICS_FILE_LOC = f"{indigo.server.getInstallFolderPath()}/Web Assets/public/daveca
 WEATHER_DEV  = indigo.devices[1655952153]
 
 # Calendar-wide properties
-payload = f"""
+payload = """
 BEGIN:VCALENDAR
 CALSCALE:GREGORIAN
 VERSION:2.0
@@ -79,18 +79,18 @@ with open(ICS_FILE_LOC, "w", encoding='utf-8') as outfile:
 # indigo.server.log(payload)
 
 # Sample output format
-"""
-BEGIN:VCALENDAR
-CALSCALE:GREGORIAN
-VERSION:2.0
-
-BEGIN:VEVENT
-DTSTART;VALUE=DATE:20240827
-SUMMARY:74º / 101º
-DESCRIPTION:Expect a day of partly cloudy with rain
-END:VEVENT
-
-[snip]
-
-END:VCALENDAR
-"""
+# """
+# BEGIN:VCALENDAR
+# CALSCALE:GREGORIAN
+# VERSION:2.0
+#
+# BEGIN:VEVENT
+# DTSTART;VALUE=DATE:20240827
+# SUMMARY:74º / 101º
+# DESCRIPTION:Expect a day of partly cloudy with rain
+# END:VEVENT
+#
+# [snip]
+#
+# END:VCALENDAR
+# """

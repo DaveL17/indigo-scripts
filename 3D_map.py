@@ -88,7 +88,9 @@ ax = fig.add_subplot(111, projection='3d')
 # lower <---> higher
 # Temperature: `bwr` (blue, white, red)
 # Humidity: `Blues` (white, blue)
-cmap = plt.cm.bwr
+
+# cmap = plt.cm.bwr  # this line is replaced by the following new line.
+cmap = plt.get_cmap('bwr')
 norm = Normalize(vmin=50, vmax=80)
 
 # ============================== Room Coordinates ==============================

@@ -1,3 +1,4 @@
+- 2025-06-05 - Stability and performance improvements.
 - 2024-11-21 - adds unifi_backup.py script, cleanup.
 - 2024-10-22 - code refinements.
 - 2024-09-24 - code cleanup.
