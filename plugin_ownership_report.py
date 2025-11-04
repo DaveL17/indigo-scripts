@@ -7,7 +7,6 @@ Generates a list of Indigo objects that "belong" to plugins.
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
 Action, it will be: Type: Action Not Found.
 """
-# TODO: doesn't show built-in Trigger with plugin owned Action. For example, Device State Changed Trigger -> Multitool Action
 import indigo  # noqa
 
 inventory = {
@@ -44,6 +43,7 @@ def generate_report():
     indigo.server.log('Control Pages - Lists each plugin and the control pages that use its actions.')
     indigo.server.log('Devices - Lists each plugin and the devices that "belong" to it.')
     indigo.server.log('Schedules - Lists each plugin and the schedules that use its actions.')
+    indigo.server.log('Schedule Actions - Lists each plugin and the schedule actions that use its actions.')
     indigo.server.log('Triggers - Lists each plugin and the triggers that use its actions.')
     indigo.server.log('Trigger Actions - Lists each plugin and the triggers actions that use its actions.')
 
@@ -117,6 +117,7 @@ def schedules():
 # also execute plugin actions -- even those of other plugins.
 def triggers():
     for trig in indigo.rawServerRequest("GetEventTriggerList"):
+        # Plugin Triggers
         if trig.get('PluginUiName', None):
             plugin_name = trig['PluginUiName']
             if plugin_name not in inventory['triggers']:
@@ -133,6 +134,15 @@ def triggers():
                         inventory['trigger_actions'][plugin_name] = []
                     inventory['trigger_actions'][plugin_name].append(trig['ID'])
 
+        # Built-in Triggers that call a plugin Actions
+        elif trig.get("ActionGroup", None):
+            for action in trig["ActionGroup"]["ActionSteps"]:
+                if action.get("PluginID", None):
+                    plugin = indigo.server.getPlugin(action["PluginID"])
+                    plugin_name = plugin.pluginDisplayName
+                    if plugin_name not in inventory['trigger_actions']:
+                        inventory["trigger_actions"][plugin_name] = []
+                    inventory["trigger_actions"][plugin_name].append(trig["ID"])
 
 # Assemble the data
 control_pages()
