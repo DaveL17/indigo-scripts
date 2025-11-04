@@ -62,7 +62,7 @@ def generate_report():
         category = category.replace("_", " ").title()
         indigo.server.log(f"{category}")
         indigo.server.log(seperator)
-        for plug, items in plugins.items():
+        for plug, items in sorted(plugins.items(), key=lambda p: p[0].lower()):  # sort by plugin name
             x = sorted([(object_name(a), a) for a in items], key=lambda item: item[0].lower())  # Sort by object name
             if plug not in skip_list:
                 indigo.server.log(plug)
