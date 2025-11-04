@@ -7,7 +7,7 @@ Generates a list of Indigo objects that "belong" to plugins.
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
 Action, it will be: Type: Action Not Found.
 """
-# TODO: device state change trigger tied to an update variable value (built-in to built-in)
+# TODO: doesn't show built-in Trigger with plugin owned Action. For example, Device State Changed Trigger -> Multitool Action
 import indigo  # noqa
 
 inventory = {
@@ -63,10 +63,10 @@ def generate_report():
         indigo.server.log(f"{category}")
         indigo.server.log(seperator)
         for plug, items in sorted(plugins.items(), key=lambda p: p[0].lower()):  # sort by plugin name
-            x = sorted([(object_name(a), a) for a in items], key=lambda item: item[0].lower())  # Sort by object name
+            sorted_items = sorted([(object_name(a), a) for a in items], key=lambda item: item[0].lower())  # Sort by object name
             if plug not in skip_list:
                 indigo.server.log(plug)
-                for item in x:  # item is an Indigo ID number.
+                for item in sorted_items:  # item is an Indigo ID number.
                     indigo.server.log(f"\t{item[0]}  [{item[1]}]")
         indigo.server.log("")
 
