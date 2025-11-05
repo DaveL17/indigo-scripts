@@ -10,6 +10,7 @@ Action, it will be: Type: Action Not Found.
 import indigo  # noqa
 from collections import defaultdict
 
+_plugin_cache = {}
 inventory = {
     'control_pages': defaultdict(set),  # Use sets to auto-deduplicate
     'devices': defaultdict(set),
@@ -17,7 +18,6 @@ inventory = {
     'triggers': defaultdict(set),
     'trigger_actions': defaultdict(set)
 }
-
 
 # skip built-ins for now
 skip_list = {
@@ -28,6 +28,16 @@ skip_list = {
     "Web Server",
     "Z-Wave",
 }
+
+
+def get_plugin_name(plugin_id: str) -> str:
+    """Get plugin display name with caching."""
+    if plugin_id not in _plugin_cache:
+        # First time seeing this plugin - look it up and store it
+        plugin = indigo.server.getPlugin(plugin_id)
+        _plugin_cache[plugin_id] = plugin.pluginDisplayName
+
+    return _plugin_cache[plugin_id]
 
 
 def generate_report():
@@ -85,8 +95,9 @@ def control_pages():
         for action in cp['PageElemList']:
             for ag in action['ActionGroup']['ActionSteps']:
                 if 'PluginID' in ag:
-                    plugin = indigo.server.getPlugin(ag['PluginID'])
-                    plugin_name = plugin.pluginDisplayName
+                    # plugin = indigo.server.getPlugin(ag['PluginID'])
+                    # plugin_name = plugin.pluginDisplayName
+                    plugin_name = get_plugin_name(ag['PluginID'])
                     inventory['control_pages'][plugin_name].add(cp['ID'])
 
 
@@ -106,8 +117,7 @@ def schedules():
     for sched in indigo.rawServerRequest("GetEventScheduleList"):
         for action in sched['ActionGroup']['ActionSteps']:
             if action.get('PluginID', None):
-                plugin = indigo.server.getPlugin(action["PluginID"])
-                plugin_name = plugin.pluginDisplayName
+                plugin_name = get_plugin_name(action["PluginID"])
                 inventory['schedules'][plugin_name].add(sched['ID'])
 
 
@@ -126,16 +136,14 @@ def triggers():
             # =====================================================================
             for action in trig['ActionGroup']['ActionSteps']:
                 if action.get('PluginID', None):
-                    plugin = indigo.server.getPlugin(action['PluginID'])
-                    plugin_name = plugin.pluginDisplayName
+                    plugin_name = get_plugin_name(action['PluginID'])
                     inventory['trigger_actions'][plugin_name].add(trig['ID'])
 
         # Built-in Triggers that call a plugin Actions
         elif trig.get("ActionGroup", None):
             for action in trig["ActionGroup"]["ActionSteps"]:
                 if action.get("PluginID", None):
-                    plugin = indigo.server.getPlugin(action["PluginID"])
-                    plugin_name = plugin.pluginDisplayName
+                    plugin_name = get_plugin_name(action['PluginID'])
                     inventory["trigger_actions"][plugin_name].add(trig["ID"])
 
 
