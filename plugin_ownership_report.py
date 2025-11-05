@@ -18,6 +18,17 @@ inventory = {
 }
 
 
+# skip built-ins for now
+skip_list = {
+    "Action Collection",
+    "Better Email",
+    "Email+",
+    "INSTEON Commands",
+    "Web Server",
+    "Z-Wave",
+}
+
+
 def generate_report():
     """ Generate and print the report """
     def object_name(obj_id: str) -> str:
@@ -36,38 +47,32 @@ def generate_report():
         except ValueError:
             return obj_id
 
-    seperator = '=' * 100
-    indigo.server.log(seperator)
+    separator = '=' * 100
+    indigo.server.log(separator)
     indigo.server.log("Plugin Ownership Report")
-    indigo.server.log(seperator)
+    indigo.server.log(separator)
     indigo.server.log('Control Pages - Lists each plugin and the control pages that use its actions.')
     indigo.server.log('Devices - Lists each plugin and the devices that "belong" to it.')
     indigo.server.log('Schedules - Lists each plugin and the schedules that use its actions.')
-    indigo.server.log('Schedule Actions - Lists each plugin and the schedule actions that use its actions.')
     indigo.server.log('Triggers - Lists each plugin and the triggers that use its actions.')
     indigo.server.log('Trigger Actions - Lists each plugin and the triggers actions that use its actions.')
 
-    # skip built-ins for now
-    skip_list = [
-        "Action Collection",
-        "Better Email",
-        "Email+",
-        "INSTEON Commands",
-        "Web Server",
-        "Z-Wave"
-    ]
-
     for category, plugins in inventory.items():
-        indigo.server.log(seperator)
+
+        # Skip empty categories
+        if not any(plugin not in skip_list for plugin in plugins):
+            continue
+
+        indigo.server.log(separator)
         category = category.replace("_", " ").title()
         indigo.server.log(f"{category}")
-        indigo.server.log(seperator)
+        indigo.server.log(separator)
         for plug, items in sorted(plugins.items(), key=lambda p: p[0].lower()):  # sort by plugin name
             sorted_items = sorted([(object_name(a), a) for a in items], key=lambda item: item[0].lower())  # Sort by object name
             if plug not in skip_list:
                 indigo.server.log(plug)
                 for item in sorted_items:  # item is an Indigo ID number.
-                    indigo.server.log(f"\t{item[0]}  [{item[1]}]")
+                    indigo.server.log(f"    {item[0]}  [{item[1]}]")
         indigo.server.log("")
 
 
@@ -143,6 +148,7 @@ def triggers():
                     if plugin_name not in inventory['trigger_actions']:
                         inventory["trigger_actions"][plugin_name] = []
                     inventory["trigger_actions"][plugin_name].append(trig["ID"])
+
 
 # Assemble the data
 control_pages()
