@@ -131,6 +131,11 @@ def control_pages():
                     plugin_name = get_plugin_name(ag["PluginID"])
                     inventory[plugin_name]["control_pages"].add(cp["ID"])
 
+            if 'TargetElemID' in action:
+                target = int(action['TargetElemID'])
+                dev = indigo.devices[target]
+                plugin_name = get_plugin_name(dev.pluginId)
+                inventory[plugin_name]["control_pages"].add(target)
 
 # =============================================================================
 def devices():
