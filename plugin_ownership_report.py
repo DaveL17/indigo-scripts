@@ -5,7 +5,9 @@
 Generates a list of Indigo objects that "belong" to plugins.
 
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
-Action, it will be: Type: Action Not Found.
+Action, it will be Type: Action Not Found.
+
+TODO: Needs error handling
 """
 import indigo  # noqa
 from collections import defaultdict
@@ -30,20 +32,24 @@ skip_list = {
 }
 
 
+# =============================================================================
 def get_plugin_name(plugin_id: str) -> str:
-    """Get plugin display name with caching."""
+    """ Get plugin display name with caching. """
     if plugin_id not in _plugin_cache:
-        # First time seeing this plugin - look it up and store it
+        # First time seeing this plugin - look it up and store it. Indigo will
+        # handle instances where `plugin_id` refers to a plugin that doesn't
+        # exist in the current environment.
         plugin = indigo.server.getPlugin(plugin_id)
         _plugin_cache[plugin_id] = plugin.pluginDisplayName
 
     return _plugin_cache[plugin_id]
 
 
+# =============================================================================
 def generate_report():
     """ Generate and print the report """
     def object_name(obj_id: str) -> str:
-        """Get the object's name."""
+        """ Get the object's name. """
         try:
             my_id = int(obj_id)
             for collection in (
@@ -82,38 +88,34 @@ def generate_report():
             sorted_items = sorted([(object_name(a), a) for a in items], key=lambda item: item[0].lower())  # Sort by object name
             if plug not in skip_list:
                 indigo.server.log(plug)
-                for item in sorted_items:  # item is an Indigo ID number.
+                for item in sorted_items:  # item here is an Indigo ID number.
                     indigo.server.log(f"    {item[0]}  [{item[1]}]")
         indigo.server.log("")
 
 
-# Control Pages
 # =============================================================================
-# List the control pages that reference plugin actions
 def control_pages():
+    """ List the control pages that reference plugin actions """
     for cp in indigo.rawServerRequest("GetControlPageList"):
         for action in cp['PageElemList']:
             for ag in action['ActionGroup']['ActionSteps']:
                 if 'PluginID' in ag:
-                    # plugin = indigo.server.getPlugin(ag['PluginID'])
-                    # plugin_name = plugin.pluginDisplayName
                     plugin_name = get_plugin_name(ag['PluginID'])
                     inventory['control_pages'][plugin_name].add(cp['ID'])
 
 
-# Devices
 # =============================================================================
-# List the devices of type plugin
 def devices():
+    """ List the devices of type plugin """
     for dev in indigo.rawServerRequest("GetDeviceList"):
         if dev.get('PluginUiName', None):
             plugin_name = dev['PluginUiName']
             inventory['devices'][plugin_name].add(dev['ID'])
 
 
-# Schedules
 # =============================================================================
 def schedules():
+    """ List the schedules that reference plugin actions """
     for sched in indigo.rawServerRequest("GetEventScheduleList"):
         for action in sched['ActionGroup']['ActionSteps']:
             if action.get('PluginID', None):
@@ -121,11 +123,10 @@ def schedules():
                 inventory['schedules'][plugin_name].add(sched['ID'])
 
 
-# Triggers
 # =============================================================================
-# List the triggers of type plugin. Triggers can be associated with plugins and
-# also execute plugin actions -- even those of other plugins.
 def triggers():
+    """ List the triggers of type plugin. Triggers can be associated with
+    plugins and also execute plugin actions -- even those of other plugins. """
     for trig in indigo.rawServerRequest("GetEventTriggerList"):
         # Plugin Triggers
         if trig.get('PluginUiName', None):
@@ -139,7 +140,7 @@ def triggers():
                     plugin_name = get_plugin_name(action['PluginID'])
                     inventory['trigger_actions'][plugin_name].add(trig['ID'])
 
-        # Built-in Triggers that call a plugin Actions
+        # Built-in Triggers that call a plugin's Actions
         elif trig.get("ActionGroup", None):
             for action in trig["ActionGroup"]["ActionSteps"]:
                 if action.get("PluginID", None):
