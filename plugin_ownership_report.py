@@ -8,13 +8,14 @@ If a plugin is reported with the name `- plugin not installed -`, look for broke
 Action, it will be: Type: Action Not Found.
 """
 import indigo  # noqa
+from collections import defaultdict
 
 inventory = {
-    'control_pages': {},
-    'devices': {},
-    'schedules': {},
-    'triggers': {},
-    'trigger_actions': {}
+    'control_pages': defaultdict(set),  # Use sets to auto-deduplicate
+    'devices': defaultdict(set),
+    'schedules': defaultdict(set),
+    'triggers': defaultdict(set),
+    'trigger_actions': defaultdict(set)
 }
 
 
@@ -86,9 +87,7 @@ def control_pages():
                 if 'PluginID' in ag:
                     plugin = indigo.server.getPlugin(ag['PluginID'])
                     plugin_name = plugin.pluginDisplayName
-                    if plugin_name not in inventory['control_pages']:
-                        inventory['control_pages'][plugin_name] = []
-                    inventory['control_pages'][plugin_name].append(cp['ID'])
+                    inventory['control_pages'][plugin_name].add(cp['ID'])
 
 
 # Devices
@@ -98,9 +97,7 @@ def devices():
     for dev in indigo.rawServerRequest("GetDeviceList"):
         if dev.get('PluginUiName', None):
             plugin_name = dev['PluginUiName']
-            if plugin_name not in inventory['devices']:
-                inventory['devices'][plugin_name] = []
-            inventory['devices'][plugin_name].append(dev['ID'])
+            inventory['devices'][plugin_name].add(dev['ID'])
 
 
 # Schedules
@@ -111,9 +108,7 @@ def schedules():
             if action.get('PluginID', None):
                 plugin = indigo.server.getPlugin(action["PluginID"])
                 plugin_name = plugin.pluginDisplayName
-                if plugin_name not in inventory['schedules']:
-                    inventory['schedules'][plugin_name] = []
-                inventory['schedules'][plugin_name].append(sched['ID'])
+                inventory['schedules'][plugin_name].add(sched['ID'])
 
 
 # Triggers
@@ -125,9 +120,7 @@ def triggers():
         # Plugin Triggers
         if trig.get('PluginUiName', None):
             plugin_name = trig['PluginUiName']
-            if plugin_name not in inventory['triggers']:
-                inventory['triggers'][plugin_name] = []
-            inventory['triggers'][plugin_name].append(trig['ID'])
+            inventory['triggers'][plugin_name].add(trig['ID'])
 
             # Trigger plugin actions
             # =====================================================================
@@ -135,9 +128,7 @@ def triggers():
                 if action.get('PluginID', None):
                     plugin = indigo.server.getPlugin(action['PluginID'])
                     plugin_name = plugin.pluginDisplayName
-                    if plugin_name not in inventory['trigger_actions']:
-                        inventory['trigger_actions'][plugin_name] = []
-                    inventory['trigger_actions'][plugin_name].append(trig['ID'])
+                    inventory['trigger_actions'][plugin_name].add(trig['ID'])
 
         # Built-in Triggers that call a plugin Actions
         elif trig.get("ActionGroup", None):
@@ -145,9 +136,7 @@ def triggers():
                 if action.get("PluginID", None):
                     plugin = indigo.server.getPlugin(action["PluginID"])
                     plugin_name = plugin.pluginDisplayName
-                    if plugin_name not in inventory['trigger_actions']:
-                        inventory["trigger_actions"][plugin_name] = []
-                    inventory["trigger_actions"][plugin_name].append(trig["ID"])
+                    inventory["trigger_actions"][plugin_name].add(trig["ID"])
 
 
 # Assemble the data
