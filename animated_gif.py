@@ -15,6 +15,7 @@ except ImportError:
 # Where the image will reside.
 IMAGES_FILE_PATH = "/Web Assets/images/controls/static/"
 work_fldr = indigo.server.getInstallFolderPath() + IMAGES_FILE_PATH
+
 # Change this list to device states, variable values, etc.
 text_list = [
     "Upstairs Thermostat: 70°",

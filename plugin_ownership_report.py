@@ -13,6 +13,7 @@ TODO: Needs unit testing
 import indigo  # noqa
 from collections import defaultdict
 
+__version__ = "0.1.1"
 _plugin_cache = {}
 inventory = defaultdict(
     lambda: {
@@ -71,7 +72,7 @@ def generate_report():
     """Generate and print the report"""
     separator = "=" * 100
     indigo.server.log(separator)
-    indigo.server.log("Plugin Ownership Report")
+    indigo.server.log(f"Plugin Ownership Report v{__version__}")
     indigo.server.log(separator)
     indigo.server.log("Control Pages - Lists each plugin and the control pages that use its actions.")
     indigo.server.log('Devices - Lists each plugin and the devices that "belong" to it.')
@@ -137,6 +138,13 @@ def control_pages():
                 if "PluginID" in ag:
                     plugin_name = get_plugin_name(ag["PluginID"])
                     inventory[plugin_name]["control_pages"].add(cp["ID"])
+
+            # Get plugin devices that are referenced by built-in controls. For
+            # example, Client Action  -> Pupup Controls
+            if action.get('TargetElemID', None):
+                dev = indigo.devices[action["TargetElemID"]]
+                plugin_name = get_plugin_name(dev.pluginId)
+                inventory[plugin_name]["control_pages"].add(dev.id)
 
 
 # =============================================================================
