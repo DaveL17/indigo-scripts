@@ -7,7 +7,8 @@ Generates a list of Indigo objects that "belong" to plugins.
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
 Action, it will be Type: Action Not Found.
 
-TODO: Needs error handling
+TODO: Needs robust error handling
+TODO: Needs unit testing
 """
 import indigo  # noqa
 from collections import defaultdict
