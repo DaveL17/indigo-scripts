@@ -121,7 +121,8 @@ def generate_report():
                     indigo.server.log(f"    {item_name}  [{item_id}]")
 
         indigo.server.log("")
-        indigo.server.log(f"=== End of Report ===")
+
+    indigo.server.log(f"=== End of Report ===")
 
 
 # =============================================================================
