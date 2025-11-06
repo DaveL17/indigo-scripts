@@ -69,7 +69,6 @@ def object_name(obj_id: str) -> str:
 def generate_report():
     """Generate and print the report"""
     separator = "=" * 100
-
     indigo.server.log(separator)
     indigo.server.log("Plugin Ownership Report")
     indigo.server.log(separator)
@@ -84,6 +83,10 @@ def generate_report():
         [(name, data) for name, data in inventory.items() if name not in skip_list],
         key=lambda p: p[0].lower(),
     )
+
+    if len(sorted_plugins) == 0:
+        indigo.server.log("")
+        indigo.server.log(f"=== No plugin owned objects found. ===")
 
     for plugin_name, categories in sorted_plugins:
         indigo.server.log(separator)
@@ -117,6 +120,7 @@ def generate_report():
                     indigo.server.log(f"    {item_name}  [{item_id}]")
 
         indigo.server.log("")
+        indigo.server.log(f"=== End of Report ===")
 
 
 # =============================================================================
