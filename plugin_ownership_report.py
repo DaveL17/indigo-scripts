@@ -132,16 +132,6 @@ def control_pages():
                     plugin_name = get_plugin_name(ag["PluginID"])
                     inventory[plugin_name]["control_pages"].add(cp["ID"])
 
-            # Devices called by built-in controls like 'Client Popup' and
-            # Server Turn On commands.
-            if 'TargetElemID' in action:
-                target = int(action['TargetElemID'])
-                try:
-                    dev = indigo.devices[target]
-                    plugin_name = get_plugin_name(dev.pluginId)
-                except KeyError:
-                    plugin_name = f"Unknown Owner"
-                inventory[plugin_name]["control_pages"].add(target)
 
 # =============================================================================
 def devices():
