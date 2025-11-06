@@ -13,7 +13,7 @@ TODO: Needs unit testing
 import indigo  # noqa
 from collections import defaultdict
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 _plugin_cache = {}
 inventory = defaultdict(
     lambda: {
@@ -143,8 +143,9 @@ def control_pages():
             # example, Client Action  -> Pupup Controls
             if action.get('TargetElemID', None):
                 dev = indigo.devices[action["TargetElemID"]]
-                plugin_name = get_plugin_name(dev.pluginId)
-                inventory[plugin_name]["control_pages"].add(dev.id)
+                if len(dev.pluginId) != 0:
+                    plugin_name = get_plugin_name(dev.pluginId)
+                    inventory[plugin_name]["control_pages"].add(dev.id)
 
 
 # =============================================================================
