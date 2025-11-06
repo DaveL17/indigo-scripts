@@ -43,7 +43,7 @@ for num in range(1, len(text_list) + 1):
                           ) as proc:
 
         # For debugging, you can look at the shell's return.
-        print(proc.communicate())
+        indigo.server.log(f"{proc.communicate()}")
 
     # Add command to the output command string for the new frame image
     OUTPUT_CMD += f"-page +0+0 {work_fldr}bar_frame{num}.gif "
@@ -54,4 +54,4 @@ OUTPUT_CMD += f"-loop 0 {work_fldr}bar_animation.gif"
 # Build the animation.
 with subprocess.Popen(OUTPUT_CMD, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) as proc1:
     # For debugging, you can look at the shell's return.
-    print(proc1.communicate())
+    indigo.server.log(f"{proc1.communicate()}")
