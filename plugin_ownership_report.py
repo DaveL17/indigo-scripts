@@ -8,8 +8,6 @@ If a plugin is reported with the name `- plugin not installed -`, look for broke
 Action, it will be Type: Action Not Found.
 
 TODO: Needs error handling
-TODO: built-in function calling plugin device
-TODO: Client action calls ppopup controls on plugin device, etc.
 """
 import indigo  # noqa
 from collections import defaultdict
@@ -62,7 +60,7 @@ def object_name(obj_id: str) -> str:
         ):
             if my_id in collection:
                 return collection[my_id].name
-        return "?"
+        return "Name unavailable"
     except ValueError:
         return obj_id
 
@@ -125,16 +123,24 @@ def generate_report():
 def control_pages():
     """List the control pages that reference plugin actions"""
     for cp in indigo.rawServerRequest("GetControlPageList"):
+        # Users do not need to see the internal page references.
+        if cp['Name'] == "_internal_devices_":
+            continue
         for action in cp["PageElemList"]:
             for ag in action["ActionGroup"]["ActionSteps"]:
                 if "PluginID" in ag:
                     plugin_name = get_plugin_name(ag["PluginID"])
                     inventory[plugin_name]["control_pages"].add(cp["ID"])
 
+            # Devices called by built-in controls like 'Client Popup' and
+            # Server Turn On commands.
             if 'TargetElemID' in action:
                 target = int(action['TargetElemID'])
-                dev = indigo.devices[target]
-                plugin_name = get_plugin_name(dev.pluginId)
+                try:
+                    dev = indigo.devices[target]
+                    plugin_name = get_plugin_name(dev.pluginId)
+                except KeyError:
+                    plugin_name = f"Unknown Owner"
                 inventory[plugin_name]["control_pages"].add(target)
 
 # =============================================================================
