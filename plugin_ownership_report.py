@@ -6,14 +6,14 @@ Generates a list of Indigo objects that "belong" to plugins.
 
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
 Action, it will be Type: Action Not Found.
-
+TODO: Jon's thing.
 TODO: Needs robust error handling
 TODO: Needs unit testing
 """
 import indigo  # noqa
 from collections import defaultdict
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 _plugin_cache = {}
 inventory = defaultdict(
     lambda: {
@@ -27,12 +27,13 @@ inventory = defaultdict(
 
 # skip built-ins for now
 skip_list = {
-    "Action Collection",
-    "Better Email",
-    "Email+",
-    "INSTEON Commands",
-    "Web Server",
-    "Z-Wave",
+    "com.perceptiveautomation.indigoplugin.ActionCollection",  # Action Collection
+    "com.flyingdiver.indigoplugin.betteremail",  # Better Email
+    "com.indigodomo.email",  # Email+
+    "com.perceptiveautomation.indigoplugin.InsteonCommands",  # Insteon
+    "com.indigodomo.webserver",  # Web Server
+    "com.perceptiveautomation.indigoplugin.zwave",  # Z-wave
+    None
 }
 
 
@@ -44,7 +45,10 @@ def get_plugin_name(plugin_id: str) -> str:
         # handle instances where `plugin_id` refers to a plugin that doesn't
         # exist in the current environment.
         plugin = indigo.server.getPlugin(plugin_id)
-        _plugin_cache[plugin_id] = plugin.pluginDisplayName
+        plugin_name = plugin.pluginDisplayName
+        if plugin_name == "- plugin not installed -":
+            plugin_name = f"Plugin not Installed: [{plugin_id}]"
+        _plugin_cache[plugin_id] = plugin_name
 
     return _plugin_cache[plugin_id]
 
@@ -81,10 +85,7 @@ def generate_report():
     indigo.server.log("Trigger Actions - Lists each plugin and the trigger actions that use its actions.")
 
     # Sort plugins case-insensitively, but filter out skip_list
-    sorted_plugins = sorted(
-        [(name, data) for name, data in inventory.items() if name not in skip_list],
-        key=lambda p: p[0].lower(),
-    )
+    sorted_plugins = sorted([(get_plugin_name(name), data) for name, data in inventory.items()], key=lambda p: p[0].lower(),)
 
     if len(sorted_plugins) == 0:
         indigo.server.log("")
@@ -135,26 +136,39 @@ def control_pages():
             continue
         for action in cp["PageElemList"]:
             for ag in action["ActionGroup"]["ActionSteps"]:
-                if "PluginID" in ag:
-                    plugin_name = get_plugin_name(ag["PluginID"])
-                    inventory[plugin_name]["control_pages"].add(cp["ID"])
+                if ag.get("PluginID", None) not in skip_list:
+                    inventory[ag["PluginID"]]["control_pages"].add(cp["ID"])
 
             # Get plugin devices that are referenced by built-in controls. For
             # example, Client Action  -> Pupup Controls
+            # TODO: this section is completely messed up
             if action.get('TargetElemID', None):
-                dev = indigo.devices[action["TargetElemID"]]
-                if len(dev.pluginId) != 0:
-                    plugin_name = get_plugin_name(dev.pluginId)
-                    inventory[plugin_name]["control_pages"].add(dev.id)
+                collections = {
+                    "device": indigo.devices,
+                    # "variable": indigo.variables,
+                    "trigger": indigo.triggers,
+                    # "schedule": indigo.schedules,
+                    # "page": indigo.controlPages,
+                }
+
+                for obj_type, collection in collections.items():
+                    for obj in collection:
+                        try:
+                            if obj.id == action["TargetElemID"]:
+                                name = obj.name
+                        except AttributeError:
+                            pass
+                if hasattr(obj, 'pluginId'):
+                    if obj.pluginId not in skip_list:
+                        inventory[action["PluginID"]]["control_pages"].add(obj.id)
 
 
 # =============================================================================
 def devices():
     """List the devices of type plugin"""
     for dev in indigo.rawServerRequest("GetDeviceList"):
-        if dev.get("PluginUiName", None):
-            plugin_name = dev["PluginUiName"]
-            inventory[plugin_name]["devices"].add(dev["ID"])
+        if dev.get("PluginID", None) not in skip_list:
+            inventory[dev["PluginID"]]["devices"].add(dev["ID"])
 
 
 # =============================================================================
@@ -162,9 +176,8 @@ def schedules():
     """List the schedules that reference plugin actions"""
     for sched in indigo.rawServerRequest("GetEventScheduleList"):
         for action in sched["ActionGroup"]["ActionSteps"]:
-            if action.get("PluginID", None):
-                plugin_name = get_plugin_name(action["PluginID"])
-                inventory[plugin_name]["schedules"].add(sched["ID"])
+            if action.get("PluginID", None) not in skip_list:
+                inventory[action["PluginID"]]["schedules"].add(sched["ID"])
 
 
 # =============================================================================
@@ -173,16 +186,14 @@ def triggers():
     plugins and also execute plugin actions -- even those of other plugins."""
     for trig in indigo.rawServerRequest("GetEventTriggerList"):
         # Plugin Triggers
-        if trig.get("PluginUiName", None):
-            plugin_name = trig["PluginUiName"]
-            inventory[plugin_name]["triggers"].add(trig["ID"])
+        if trig.get("PluginID", None) not in skip_list:
+            inventory[trig["PluginID"]]["triggers"].add(trig["ID"])
 
         # Trigger plugin actions (from both plugin triggers and built-in triggers)
         if trig.get("ActionGroup", None):
             for action in trig["ActionGroup"]["ActionSteps"]:
-                if action.get("PluginID", None):
-                    plugin_name = get_plugin_name(action["PluginID"])
-                    inventory[plugin_name]["trigger_actions"].add(trig["ID"])
+                if action.get("PluginID", None) not in skip_list:
+                    inventory[action["PluginID"]]["trigger_actions"].add(trig["ID"])
 
 
 # Assemble the data
