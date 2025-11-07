@@ -6,7 +6,6 @@ Generates a list of Indigo objects that "belong" to plugins.
 
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
 Action, it will be Type: Action Not Found.
-TODO: Jon's thing.
 TODO: Needs robust error handling
 TODO: Needs unit testing
 """
@@ -33,6 +32,7 @@ skip_list = {
     "com.perceptiveautomation.indigoplugin.InsteonCommands",  # Insteon
     "com.indigodomo.webserver",  # Web Server
     "com.perceptiveautomation.indigoplugin.zwave",  # Z-wave
+    "",  # if dev.pluginId is empty, we don't care about it
     None
 }
 
@@ -44,8 +44,11 @@ def get_plugin_name(plugin_id: str) -> str:
         # First time seeing this plugin - look it up and store it. Indigo will
         # handle instances where `plugin_id` refers to a plugin that doesn't
         # exist in the current environment.
-        plugin = indigo.server.getPlugin(plugin_id)
-        plugin_name = plugin.pluginDisplayName
+        try:
+            plugin = indigo.server.getPlugin(plugin_id)
+            plugin_name = plugin.pluginDisplayName
+        except TypeError:
+            plugin_name = "- plugin not installed -"  # this is meant to apply to things that don't have a plugin_id.
         if plugin_name == "- plugin not installed -":
             plugin_name = f"Plugin not Installed: [{plugin_id}]"
         _plugin_cache[plugin_id] = plugin_name
@@ -140,19 +143,16 @@ def control_pages():
                     inventory[ag["PluginID"]]["control_pages"].add(control_page["ID"])
 
             # Get plugin devices that are referenced by built-in controls. For
-            # example, Client Action  -> Pupup Controls
-            # TODO: this section is completely messed up
+            # example, Client Action  -> Popup Controls
             obj = None
             if action.get('TargetElemID', None):
                 elem_id = action["TargetElemID"]
                 # TargetElemID is a device
                 if elem_id in indigo.devices:
                     obj = indigo.devices[elem_id]
-                    obj_name = object_name(obj.id)
                 # TargetElemID is a trigger
                 elif elem_id in indigo.triggers:
                     obj = indigo.triggers[elem_id]
-                    obj_name = object_name(obj.id)
                 # TargetElemID is something else
                 else:
                     indigo.server.log(f"{elem_id} is not a device or trigger")
