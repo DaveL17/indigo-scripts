@@ -130,37 +130,36 @@ def generate_report():
 # =============================================================================
 def control_pages():
     """List the control pages that reference plugin actions"""
-    for cp in indigo.rawServerRequest("GetControlPageList"):
+    for control_page in indigo.rawServerRequest("GetControlPageList"):
         # Users do not need to see the internal page references.
-        if cp['Name'] == "_internal_devices_":
+        if control_page['Name'] == "_internal_devices_":
             continue
-        for action in cp["PageElemList"]:
+        for action in control_page["PageElemList"]:
             for ag in action["ActionGroup"]["ActionSteps"]:
                 if ag.get("PluginID", None) not in skip_list:
-                    inventory[ag["PluginID"]]["control_pages"].add(cp["ID"])
+                    inventory[ag["PluginID"]]["control_pages"].add(control_page["ID"])
 
             # Get plugin devices that are referenced by built-in controls. For
             # example, Client Action  -> Pupup Controls
             # TODO: this section is completely messed up
+            obj = None
             if action.get('TargetElemID', None):
-                collections = {
-                    "device": indigo.devices,
-                    # "variable": indigo.variables,
-                    "trigger": indigo.triggers,
-                    # "schedule": indigo.schedules,
-                    # "page": indigo.controlPages,
-                }
+                elem_id = action["TargetElemID"]
+                # TargetElemID is a device
+                if elem_id in indigo.devices:
+                    obj = indigo.devices[elem_id]
+                    obj_name = object_name(obj.id)
+                # TargetElemID is a trigger
+                elif elem_id in indigo.triggers:
+                    obj = indigo.triggers[elem_id]
+                    obj_name = object_name(obj.id)
+                # TargetElemID is something else
+                else:
+                    indigo.server.log(f"{elem_id} is not a device or trigger")
 
-                for obj_type, collection in collections.items():
-                    for obj in collection:
-                        try:
-                            if obj.id == action["TargetElemID"]:
-                                name = obj.name
-                        except AttributeError:
-                            pass
                 if hasattr(obj, 'pluginId'):
                     if obj.pluginId not in skip_list:
-                        inventory[action["PluginID"]]["control_pages"].add(obj.id)
+                        inventory[obj.pluginId]["control_pages"].add(obj.id)
 
 
 # =============================================================================
@@ -189,7 +188,7 @@ def triggers():
         if trig.get("PluginID", None) not in skip_list:
             inventory[trig["PluginID"]]["triggers"].add(trig["ID"])
 
-        # Trigger plugin actions (from both plugin triggers and built-in triggers)
+        # Trigger actions (from both plugin triggers and built-in triggers)
         if trig.get("ActionGroup", None):
             for action in trig["ActionGroup"]["ActionSteps"]:
                 if action.get("PluginID", None) not in skip_list:
