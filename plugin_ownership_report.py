@@ -19,6 +19,7 @@ _plugin_cache = {}
 # It uses sets so only one instance of a value is ever tracked.
 inventory = defaultdict(
     lambda: {
+        "action_groups": set(),
         "control_pages": set(),
         "devices": set(),
         "schedules": set(),
@@ -39,45 +40,6 @@ skip_list = {
     "",  # if a pluginId is empty, we don't care about it (i.e., X-10)
     None
 }
-
-
-# =============================================================================
-def get_plugin_name(plugin_id: str) -> str:
-    """Get plugin display name with caching."""
-    if plugin_id not in _plugin_cache:
-        # First time seeing this plugin - look it up and store it. Indigo will
-        # handle instances where `plugin_id` refers to a plugin that doesn't
-        # exist in the current environment.
-        try:
-            plugin = indigo.server.getPlugin(plugin_id)
-            plugin_name = plugin.pluginDisplayName
-        except TypeError:
-            # this is meant to apply to things that don't have a plugin_id if
-            # we haven't already skipped them.
-            plugin_name = "- plugin not installed -"
-        if plugin_name == "- plugin not installed -":
-            plugin_name = f"Plugin not Installed: [{plugin_id}]"
-        _plugin_cache[plugin_id] = plugin_name
-
-    return _plugin_cache[plugin_id]
-
-
-# =============================================================================
-def object_name(obj_id: str) -> str:
-    """Get the object's name."""
-    try:
-        my_id = int(obj_id)
-        for collection in (
-            indigo.devices,
-            indigo.triggers,
-            indigo.controlPages,
-            indigo.schedules,
-        ):
-            if my_id in collection:
-                return collection[my_id].name
-        return "Name unavailable"
-    except ValueError:
-        return obj_id
 
 
 # =============================================================================
@@ -107,6 +69,7 @@ def generate_report():
 
         # Process each category
         for category_key in [
+            "action_groups",
             "control_pages",
             "devices",
             "schedules",
@@ -124,7 +87,7 @@ def generate_report():
             else:
                 # Sort items by name, case-insensitively
                 sorted_items = sorted(
-                    [(object_name(item_id), item_id) for item_id in items],
+                    [(get_object_name(item_id), item_id) for item_id in items],
                     key=lambda item: item[0].lower(),
                 )
 
@@ -134,6 +97,55 @@ def generate_report():
         indigo.server.log("")
 
     indigo.server.log(f"=== End of Report ===")
+
+
+# =============================================================================
+def get_object_name(obj_id: str) -> str:
+    """Get the object's name."""
+    try:
+        my_id = int(obj_id)
+        for collection in (
+            indigo.actionGroups,
+            indigo.controlPages,
+            indigo.devices,
+            indigo.schedules,
+            indigo.triggers,
+        ):
+            if my_id in collection:
+                return collection[my_id].name
+        return "Name unavailable"
+    except ValueError:
+        return obj_id
+
+
+# =============================================================================
+def get_plugin_name(plugin_id: str) -> str:
+    """Get plugin display name with caching."""
+    if plugin_id not in _plugin_cache:
+        # First time seeing this plugin - look it up and store it. Indigo will
+        # handle instances where `plugin_id` refers to a plugin that doesn't
+        # exist in the current environment.
+        try:
+            plugin = indigo.server.getPlugin(plugin_id)
+            plugin_name = plugin.pluginDisplayName
+        except TypeError:
+            # this is meant to apply to things that don't have a plugin_id if
+            # we haven't already skipped them.
+            plugin_name = "- plugin not installed -"
+        if plugin_name == "- plugin not installed -":
+            plugin_name = f"Plugin not Installed: [{plugin_id}]"
+        _plugin_cache[plugin_id] = plugin_name
+
+    return _plugin_cache[plugin_id]
+
+
+def action_groups():
+    """List plugin actions added to action groups."""
+    for action_group in indigo.rawServerRequest("GetActionGroupList"):
+        for action in action_group['ActionSteps']:
+            if action.get('PluginID', None) not in skip_list:
+                indigo.server.log(f"{action['PluginID']}")
+                inventory[action["PluginID"]]["action_groups"].add(action_group["ID"])
 
 
 # =============================================================================
@@ -202,6 +214,7 @@ def triggers():
 
 
 # Assemble the data
+action_groups()
 control_pages()
 devices()
 schedules()
