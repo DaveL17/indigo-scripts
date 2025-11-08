@@ -14,6 +14,9 @@ from collections import defaultdict
 
 __version__ = "0.1.3"
 _plugin_cache = {}
+
+# Initialize an inventory dictionary with default empty collections.
+# It uses sets so only one instance of a value is ever tracked.
 inventory = defaultdict(
     lambda: {
         "control_pages": set(),
@@ -24,15 +27,16 @@ inventory = defaultdict(
     }
 )
 
-# skip built-ins for now
+# skip built-ins
 skip_list = {
     "com.perceptiveautomation.indigoplugin.ActionCollection",  # Action Collection
+    "com.perceptiveautomation.indigoplugin.devicecollection",  # virtual devices
     "com.flyingdiver.indigoplugin.betteremail",  # Better Email
     "com.indigodomo.email",  # Email+
     "com.perceptiveautomation.indigoplugin.InsteonCommands",  # Insteon
     "com.indigodomo.webserver",  # Web Server
     "com.perceptiveautomation.indigoplugin.zwave",  # Z-wave
-    "",  # if dev.pluginId is empty, we don't care about it
+    "",  # if a pluginId is empty, we don't care about it (i.e., X-10)
     None
 }
 
@@ -48,7 +52,9 @@ def get_plugin_name(plugin_id: str) -> str:
             plugin = indigo.server.getPlugin(plugin_id)
             plugin_name = plugin.pluginDisplayName
         except TypeError:
-            plugin_name = "- plugin not installed -"  # this is meant to apply to things that don't have a plugin_id.
+            # this is meant to apply to things that don't have a plugin_id if
+            # we haven't already skipped them.
+            plugin_name = "- plugin not installed -"
         if plugin_name == "- plugin not installed -":
             plugin_name = f"Plugin not Installed: [{plugin_id}]"
         _plugin_cache[plugin_id] = plugin_name
