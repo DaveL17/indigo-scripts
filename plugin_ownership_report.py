@@ -12,7 +12,7 @@ TODO: Needs unit testing
 import indigo  # noqa
 from collections import defaultdict
 
-__version__ = "0.1.4"
+__version__ = "0.1.6"
 _plugin_cache = {}
 
 # Initialize an inventory dictionary with default empty collections.
@@ -167,14 +167,17 @@ def control_pages():
                 if ag.get("PluginID", None) not in skip_list:
                     inventory[ag["PluginID"]]["control_pages"].add(control_page["ID"])
 
-            # Get plugin devices that are referenced by built-in controls. For
-            # example, Client Action  -> Popup Controls
+            # Get plugin devices and triggers that are referenced by built-in
+            # controls. For example, Client Action  -> Popup Controls
             obj = None
             if action.get('TargetElemID', None):
                 elem_id = action["TargetElemID"]
                 # TargetElemID is a device
                 if elem_id in indigo.devices:
                     obj = indigo.devices[elem_id]
+                # TargetElemID is an action group
+                elif elem_id in indigo.actionGroups:
+                    obj = indigo.triggers[elem_id]
                 # TargetElemID is a trigger
                 elif elem_id in indigo.triggers:
                     obj = indigo.triggers[elem_id]
@@ -184,9 +187,11 @@ def control_pages():
                     # indigo.server.log(f"{elem_id} is not a device or trigger")
                     pass
 
+                # Check to see if the discovered object has a pluginId attribute.
+                # If it does, add the object id to the inventory.
                 if hasattr(obj, 'pluginId'):
                     if obj.pluginId not in skip_list:
-                        inventory[obj.pluginId]["control_pages"].add(obj.id)
+                        inventory[obj.pluginId]["control_pages"].add(control_page["ID"])
 
 
 # =============================================================================
