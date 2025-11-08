@@ -12,7 +12,7 @@ TODO: Needs unit testing
 import indigo  # noqa
 from collections import defaultdict
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 _plugin_cache = {}
 
 # Initialize an inventory dictionary with default empty collections.
@@ -30,14 +30,14 @@ inventory = defaultdict(
 
 # skip built-ins
 skip_list = {
-    "com.perceptiveautomation.indigoplugin.ActionCollection",  # Action Collection
-    "com.perceptiveautomation.indigoplugin.devicecollection",  # virtual devices
     "com.flyingdiver.indigoplugin.betteremail",  # Better Email
     "com.indigodomo.email",  # Email+
-    "com.perceptiveautomation.indigoplugin.InsteonCommands",  # Insteon
     "com.indigodomo.webserver",  # Web Server
+    "com.perceptiveautomation.indigoplugin.ActionCollection",  # Action Collection
+    "com.perceptiveautomation.indigoplugin.devicecollection",  # virtual devices
+    "com.perceptiveautomation.indigoplugin.InsteonCommands",  # Insteon
     "com.perceptiveautomation.indigoplugin.zwave",  # Z-wave
-    "",  # if a pluginId is empty, we don't care about it (i.e., X-10)
+    "",  # if a pluginId is empty (i.e., X-10), we don't care about it.
     None
 }
 
@@ -56,8 +56,11 @@ def generate_report():
     indigo.server.log("Trigger Actions - Lists each plugin and the trigger actions that use its actions.")
 
     # Sort plugins case-insensitively, but filter out skip_list
-    sorted_plugins = sorted([(get_plugin_name(name), data) for name, data in inventory.items()], key=lambda p: p[0].lower(),)
+    sorted_plugins = sorted(
+        [(get_plugin_name(name), data) for name, data in inventory.items()], key=lambda p: p[0].lower()
+    )
 
+    # The inventory is empty
     if len(sorted_plugins) == 0:
         indigo.server.log("")
         indigo.server.log(f"=== No plugin owned objects found. ===")
@@ -79,16 +82,15 @@ def generate_report():
             # Format category name
             category_display = category_key.replace("_", " ").title()
             indigo.server.log(category_display)
-
             items = categories[category_key]
 
+            # No entries in the category
             if not items:
                 indigo.server.log("    None")
             else:
                 # Sort items by name, case-insensitively
                 sorted_items = sorted(
-                    [(get_object_name(item_id), item_id) for item_id in items],
-                    key=lambda item: item[0].lower(),
+                    [(get_object_name(item_id), item_id) for item_id in items], key=lambda item: item[0].lower()
                 )
 
                 for item_name, item_id in sorted_items:
@@ -100,22 +102,25 @@ def generate_report():
 
 
 # =============================================================================
-def get_object_name(obj_id: str) -> str:
+def get_object_name(obj_id: int) -> str:
     """Get the object's name."""
-    try:
-        my_id = int(obj_id)
-        for collection in (
+
+    obj_types = (
             indigo.actionGroups,
             indigo.controlPages,
             indigo.devices,
             indigo.schedules,
             indigo.triggers,
-        ):
-            if my_id in collection:
-                return collection[my_id].name
-        return "Name unavailable"
-    except ValueError:
-        return obj_id
+        )
+
+    try:
+        for collection in obj_types:
+            if obj_id in collection:
+                return collection[obj_id].name
+    except (KeyError, ValueError):
+        pass
+
+    return "Name unavailable"
 
 
 # =============================================================================
@@ -129,9 +134,12 @@ def get_plugin_name(plugin_id: str) -> str:
             plugin = indigo.server.getPlugin(plugin_id)
             plugin_name = plugin.pluginDisplayName
         except TypeError:
-            # this is meant to apply to things that don't have a plugin_id if
-            # we haven't already skipped them.
+            # This is meant to apply to things that don't have a plugin_id if we
+            # haven't already skipped them.
             plugin_name = "- plugin not installed -"
+
+        # This looks duplicative of the next `if`, but it's not. Indigo can also
+        # return this plugin name string.
         if plugin_name == "- plugin not installed -":
             plugin_name = f"Plugin not Installed: [{plugin_id}]"
         _plugin_cache[plugin_id] = plugin_name
