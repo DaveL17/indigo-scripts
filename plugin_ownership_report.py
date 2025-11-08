@@ -144,7 +144,6 @@ def action_groups():
     for action_group in indigo.rawServerRequest("GetActionGroupList"):
         for action in action_group['ActionSteps']:
             if action.get('PluginID', None) not in skip_list:
-                indigo.server.log(f"{action['PluginID']}")
                 inventory[action["PluginID"]]["action_groups"].add(action_group["ID"])
 
 
@@ -173,6 +172,7 @@ def control_pages():
                     obj = indigo.triggers[elem_id]
                 # TargetElemID is something else
                 else:
+                    # TODO this line is for testing, hide the output in production.
                     indigo.server.log(f"{elem_id} is not a device or trigger")
 
                 if hasattr(obj, 'pluginId'):
