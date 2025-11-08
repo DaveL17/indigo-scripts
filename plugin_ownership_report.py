@@ -47,7 +47,7 @@ def generate_report():
     """Generate and print the report"""
     separator = "=" * 100
     indigo.server.log(separator)
-    indigo.server.log(f"Plugin Ownership Report v{__version__}")
+    indigo.server.log(f"Plugin Reference Report v{__version__}")
     indigo.server.log(separator)
     indigo.server.log("Control Pages - Lists each plugin and the control pages that use its actions.")
     indigo.server.log('Devices - Lists each plugin and the devices that "belong" to it.')
@@ -147,8 +147,9 @@ def get_plugin_name(plugin_id: str) -> str:
     return _plugin_cache[plugin_id]
 
 
+# =============================================================================
 def action_groups():
-    """List plugin actions added to action groups."""
+    """List action groups that reference plugin objects."""
     for action_group in indigo.rawServerRequest("GetActionGroupList"):
         for action in action_group['ActionSteps']:
             if action.get('PluginID', None) not in skip_list:
@@ -157,7 +158,7 @@ def action_groups():
 
 # =============================================================================
 def control_pages():
-    """List the control pages that reference plugin actions"""
+    """List the control pages that reference plugin objects"""
     for control_page in indigo.rawServerRequest("GetControlPageList"):
         # Users do not need to see the internal page references.
         if control_page['Name'] == "_internal_devices_":
@@ -204,7 +205,7 @@ def devices():
 
 # =============================================================================
 def schedules():
-    """List the schedules that reference plugin actions"""
+    """List the schedules that reference plugin objects"""
     for sched in indigo.rawServerRequest("GetEventScheduleList"):
         for action in sched["ActionGroup"]["ActionSteps"]:
             if action.get("PluginID", None) not in skip_list:
