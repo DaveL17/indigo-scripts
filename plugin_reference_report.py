@@ -6,6 +6,10 @@ Generates a list of Indigo objects that "belong" to plugins.
 
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
 Action, it will be Type: Action Not Found.
+TODO: Add a control number which could make things like `climate  [1020767026], control #7` possible.
+TODO: [maybe] Search/Grep into embedded scripts to look for references to `Class == 101` and `ScriptType == 0` and then
+      search inside `ScriptSource`.
+TODO: [maybe] Search/Grp conditionals, too
 TODO: Needs robust error handling
 TODO: Needs unit testing
 """
@@ -179,7 +183,7 @@ def control_pages():
                     obj = indigo.devices[elem_id]
                 # TargetElemID is an action group
                 elif elem_id in indigo.actionGroups:
-                    obj = indigo.triggers[elem_id]
+                    obj = indigo.actionGroups[elem_id]
                 # TargetElemID is a trigger
                 # FIXME: I'm not sure this is a necessary test -- can you fire a trigger from a CP?
                 elif elem_id in indigo.triggers:
