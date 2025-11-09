@@ -60,12 +60,7 @@ skip_list = {
 def generate_report():
     """Generate and print the report"""
     separator = "=" * 100
-    indigo.server.log(separator)
-    indigo.server.log(f"Plugin Reference Report v{__version__}")
-    # indigo.server.log(separator)
-    # indigo.server.log("This report shows Indigo objects related to plugins and the locations where those objects are ")
-    # indigo.server.log("used. It shows Action Groups, Control Pages, Devices, Schedules, Triggers, and Trigger Actions")
-    # indigo.server.log("and the location of references under each category.")
+    report = f"Plugin Reference Report v{__version__}"
 
     # Sort plugins case-insensitively, but filter out skip_list
     sorted_plugins = sorted(
@@ -74,13 +69,10 @@ def generate_report():
 
     # The inventory is empty
     if len(sorted_plugins) == 0:
-        indigo.server.log("")
-        indigo.server.log(f"=== No plugin owned objects found. ===")
+        report += f"\nNo plugins installed."
 
     for name, plugin_name, categories in sorted_plugins:
-        indigo.server.log(separator)
-        indigo.server.log(f"{plugin_name} [{name}]")
-        indigo.server.log(separator)
+        report += f"\n{separator}\n{plugin_name}\n{separator}"
 
         # Process each category
         for category_key in [
@@ -93,12 +85,12 @@ def generate_report():
         ]:
             # Format category name
             category_display = category_key.replace("_", " ").title()
-            indigo.server.log(category_display)
             items = categories[category_key]
+            report += f"\n{category_display}"
 
             # No entries in the category
             if not items:
-                indigo.server.log("    None")
+                report += "\n    None"
             else:
                 # Sort items by name, case-insensitively
                 sorted_items = sorted(
@@ -106,11 +98,12 @@ def generate_report():
                 )
 
                 for item_name, item_id in sorted_items:
-                    indigo.server.log(f"    {item_name}  [{item_id}]")
+                    report += f"\n    {item_name}  [{item_id}]"
 
-        indigo.server.log("")
+        report += "\n"
 
-    indigo.server.log(f"=== End of Report ===")
+    report += "\n=== End of Report ==="
+    indigo.server.log(report)
 
 
 # =============================================================================
@@ -167,12 +160,15 @@ def control_pages():
         if control_page['Name'] == "_internal_devices_":
             continue
         for action in control_page["PageElemList"]:
+            server_index = action['ServerIndex']  # This is the Z-index value
             for ag in action["ActionGroup"]["ActionSteps"]:
                 if ag.get("PluginID", None) not in skip_list:
-                    inventory[ag["PluginID"]]["control_pages"].add(control_page["ID"])
+                    inventory[ag["PluginID"]]["control_pages"].add(f"{control_page['ID']}  Control #{server_index}")
+                    # inventory[ag["PluginID"]]["control_pages"].add(control_page["ID"])
 
             # Get plugin devices and triggers that are referenced by built-in
             # controls. For example, Client Action  -> Popup Controls
+            # These don't have a `ServerIndex` because they aren't "on the page".
             obj = None
             if action.get('TargetElemID', None):
                 elem_id = action["TargetElemID"]
@@ -194,7 +190,8 @@ def control_pages():
                 # If it does, add the object id to the inventory.
                 if hasattr(obj, 'pluginId'):
                     if obj.pluginId not in skip_list:
-                        inventory[obj.pluginId]["control_pages"].add(control_page["ID"])
+                        # inventory[obj.pluginId]["control_pages"].add(control_page["ID"])
+                        inventory[obj.pluginId]["control_pages"].add(f"{control_page['ID']}  Control #{server_index}")
 
 
 # =============================================================================
@@ -238,4 +235,6 @@ schedules()
 triggers()
 
 # Output the results
-generate_report()
+# generate_report()
+
+indigo.server.log(f"{inventory}")
