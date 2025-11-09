@@ -62,16 +62,14 @@ def generate_report():
     separator = "=" * 100
     indigo.server.log(separator)
     indigo.server.log(f"Plugin Reference Report v{__version__}")
-    indigo.server.log(separator)
-    indigo.server.log("Control Pages - Lists each plugin and the control pages that use its actions.")
-    indigo.server.log('Devices - Lists each plugin and the devices that "belong" to it.')
-    indigo.server.log("Schedules - Lists each plugin and the schedules that use its actions.")
-    indigo.server.log("Triggers - Lists each plugin and the triggers that use its actions.")
-    indigo.server.log("Trigger Actions - Lists each plugin and the trigger actions that use its actions.")
+    # indigo.server.log(separator)
+    # indigo.server.log("This report shows Indigo objects related to plugins and the locations where those objects are ")
+    # indigo.server.log("used. It shows Action Groups, Control Pages, Devices, Schedules, Triggers, and Trigger Actions")
+    # indigo.server.log("and the location of references under each category.")
 
     # Sort plugins case-insensitively, but filter out skip_list
     sorted_plugins = sorted(
-        [(get_plugin_name(name), data) for name, data in inventory.items()], key=lambda p: p[0].lower()
+        [(name, get_plugin_name(name), data) for name, data in inventory.items()], key=lambda p: p[1].lower()
     )
 
     # The inventory is empty
@@ -79,9 +77,9 @@ def generate_report():
         indigo.server.log("")
         indigo.server.log(f"=== No plugin owned objects found. ===")
 
-    for plugin_name, categories in sorted_plugins:
+    for name, plugin_name, categories in sorted_plugins:
         indigo.server.log(separator)
-        indigo.server.log(plugin_name)
+        indigo.server.log(f"{plugin_name} [{name}]")
         indigo.server.log(separator)
 
         # Process each category
