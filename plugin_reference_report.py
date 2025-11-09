@@ -16,19 +16,19 @@ TODO: Needs unit testing
 import indigo  # noqa
 from collections import defaultdict
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 _plugin_cache = {}
 
 # Initialize an inventory dictionary with default empty collections.
 # It uses sets so only one instance of a value is ever tracked.
 inventory = defaultdict(
     lambda: {
-        "action_groups": set(),
-        "control_pages": set(),
-        "devices": set(),
-        "schedules": set(),
-        "triggers": set(),
-        "trigger_actions": set(),
+        "action_groups": [],
+        "control_pages": [],
+        "devices": [],
+        "schedules": [],
+        "triggers": [],
+        "trigger_actions": [],
     }
 )
 
@@ -62,7 +62,7 @@ def generate_report():
     separator = "=" * 100
     report = f"Plugin Reference Report v{__version__}"
 
-    # Sort plugins case-insensitively, but filter out skip_list
+    # Sort plugins case-insensitively
     sorted_plugins = sorted(
         [(name, get_plugin_name(name), data) for name, data in inventory.items()], key=lambda p: p[1].lower()
     )
@@ -98,7 +98,10 @@ def generate_report():
                 )
 
                 for item_name, item_id in sorted_items:
-                    report += f"\n    {item_name}  [{item_id}]"
+                    if 'description' in item_id:
+                        report += f"\n    {item_name}  [{item_id['id']}  {item_id['description']}]"
+                    else:
+                        report += f"\n    {item_name}  [{item_id['id']}]"
 
         report += "\n"
 
@@ -107,8 +110,9 @@ def generate_report():
 
 
 # =============================================================================
-def get_object_name(obj_id: int) -> str:
+def get_object_name(obj):
     """Get the object's name."""
+    obj_id = obj['id']
     try:
         for collection in obj_types:
             if obj_id in collection:
@@ -149,7 +153,9 @@ def action_groups():
     for action_group in indigo.rawServerRequest("GetActionGroupList"):
         for action in action_group['ActionSteps']:
             if action.get('PluginID', None) not in skip_list:
-                inventory[action["PluginID"]]["action_groups"].add(action_group["ID"])
+                inventory[action["PluginID"]]["action_groups"].append(
+                    {'id': action_group["ID"],}
+                )
 
 
 # =============================================================================
@@ -160,11 +166,13 @@ def control_pages():
         if control_page['Name'] == "_internal_devices_":
             continue
         for action in control_page["PageElemList"]:
-            server_index = action['ServerIndex']  # This is the Z-index value
             for ag in action["ActionGroup"]["ActionSteps"]:
                 if ag.get("PluginID", None) not in skip_list:
-                    inventory[ag["PluginID"]]["control_pages"].add(f"{control_page['ID']}  Control #{server_index}")
-                    # inventory[ag["PluginID"]]["control_pages"].add(control_page["ID"])
+                    inventory[ag["PluginID"]]["control_pages"].append(
+                        {'id': control_page["ID"],
+                         'description': "built-in control",
+                         }
+                    )
 
             # Get plugin devices and triggers that are referenced by built-in
             # controls. For example, Client Action  -> Popup Controls
@@ -190,8 +198,10 @@ def control_pages():
                 # If it does, add the object id to the inventory.
                 if hasattr(obj, 'pluginId'):
                     if obj.pluginId not in skip_list:
-                        # inventory[obj.pluginId]["control_pages"].add(control_page["ID"])
-                        inventory[obj.pluginId]["control_pages"].add(f"{control_page['ID']}  Control #{server_index}")
+                        inventory[obj.pluginId]["control_pages"].append(
+                            {'id': control_page["ID"],
+                             'description': f"Control #{action['ServerIndex']}",}
+                        )
 
 
 # =============================================================================
@@ -199,7 +209,9 @@ def devices():
     """List the devices of type plugin"""
     for dev in indigo.rawServerRequest("GetDeviceList"):
         if dev.get("PluginID", None) not in skip_list:
-            inventory[dev["PluginID"]]["devices"].add(dev["ID"])
+            inventory[dev["PluginID"]]["devices"].append(
+                {'id': dev["ID"],}
+            )
 
 
 # =============================================================================
@@ -208,7 +220,9 @@ def schedules():
     for sched in indigo.rawServerRequest("GetEventScheduleList"):
         for action in sched["ActionGroup"]["ActionSteps"]:
             if action.get("PluginID", None) not in skip_list:
-                inventory[action["PluginID"]]["schedules"].add(sched["ID"])
+                inventory[action["PluginID"]]["schedules"].append(
+                    {'id': sched["ID"],}
+                )
 
 
 # =============================================================================
@@ -218,13 +232,17 @@ def triggers():
     for trig in indigo.rawServerRequest("GetEventTriggerList"):
         # Plugin Triggers
         if trig.get("PluginID", None) not in skip_list:
-            inventory[trig["PluginID"]]["triggers"].add(trig["ID"])
+            inventory[trig["PluginID"]]["triggers"].append(
+                {'id': trig["ID"]}
+        )
 
         # Trigger actions (from both plugin triggers and built-in triggers)
         if trig.get("ActionGroup", None):
             for action in trig["ActionGroup"]["ActionSteps"]:
                 if action.get("PluginID", None) not in skip_list:
-                    inventory[action["PluginID"]]["trigger_actions"].add(trig["ID"])
+                    inventory[action["PluginID"]]["trigger_actions"].append(
+                        {'id': trig["ID"],}
+                    )
 
 
 # Assemble the data
@@ -235,6 +253,4 @@ schedules()
 triggers()
 
 # Output the results
-# generate_report()
-
-indigo.server.log(f"{inventory}")
+generate_report()
