@@ -12,7 +12,7 @@ TODO: Needs unit testing
 import indigo  # noqa
 from collections import defaultdict
 
-__version__ = "0.1.6"
+__version__ = "0.1.8"
 _plugin_cache = {}
 
 # Initialize an inventory dictionary with default empty collections.
@@ -27,6 +27,16 @@ inventory = defaultdict(
         "trigger_actions": set(),
     }
 )
+
+# Used to look up object IDs to determine object types
+obj_types = (
+    indigo.actionGroups,
+    indigo.controlPages,
+    indigo.devices,
+    indigo.schedules,
+    indigo.triggers,
+)
+
 
 # skip built-ins
 skip_list = {
@@ -104,15 +114,6 @@ def generate_report():
 # =============================================================================
 def get_object_name(obj_id: int) -> str:
     """Get the object's name."""
-
-    obj_types = (
-            indigo.actionGroups,
-            indigo.controlPages,
-            indigo.devices,
-            indigo.schedules,
-            indigo.triggers,
-        )
-
     try:
         for collection in obj_types:
             if obj_id in collection:
@@ -180,12 +181,11 @@ def control_pages():
                 elif elem_id in indigo.actionGroups:
                     obj = indigo.triggers[elem_id]
                 # TargetElemID is a trigger
+                # FIXME: I'm not sure this is a necessary test -- can you fire a trigger from a CP?
                 elif elem_id in indigo.triggers:
                     obj = indigo.triggers[elem_id]
                 # TargetElemID is something else
                 else:
-                    # TODO this line is for testing, hide the output in production.
-                    # indigo.server.log(f"{elem_id} is not a device or trigger")
                     pass
 
                 # Check to see if the discovered object has a pluginId attribute.
