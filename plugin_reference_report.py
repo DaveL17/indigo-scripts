@@ -6,18 +6,17 @@ Generates a list of Indigo objects that "belong" to plugins.
 
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
 Action, it will be Type: Action Not Found.
-TODO: [maybe] Search/Grep conditionals, too
 TODO: Needs robust error handling
 TODO: Needs unit testing
 """
 from collections import defaultdict
 import indigo  # noqa
 
-__version__ = "0.1.11"
+__version__ = "0.1.12"
 _plugin_cache = {}
 
-# Initialize an inventory dictionary with default empty collections. It uses sets so only one instance of a value is
-# ever tracked.
+# Initialize an inventory dictionary with default empty collections. It uses lists so there can be multiple entries for
+# a single entry. For example, a control page may reference the same plugin device multiple times for different states.
 inventory = defaultdict(
     lambda: {
         "action_groups": [],
@@ -38,8 +37,10 @@ obj_types = (
     indigo.triggers,
 )
 
+# List of installed plugins (both enabled and disabled)
+plugin_list = indigo.server.getPluginList(includeDisabled=True)
 
-# skip built-ins
+# Skip certain plugin id's for things like built-ins or empty plugin id fields.
 skip_list = {
     "com.flyingdiver.indigoplugin.betteremail",  # Better Email
     "com.indigodomo.email",  # Email+
@@ -53,7 +54,9 @@ skip_list = {
 }
 
 
+# =============================================================================
 def add_to_inventory(plugin_id: str, category: str, details: dict):
+    """Add entries to inventory dict"""
     inventory[plugin_id][category].append(details)
 
 
@@ -156,7 +159,6 @@ def action_groups():
             # Search for embedded scripts with plugin references (saved as actions). Will match one or more plugin
             # references in the target script.
             elif (action.get("Class", None) == 101) and (action.get("ScriptType", None) == 0):
-                plugin_list = indigo.server.getPluginList(includeDisabled=True)
                 script_source = action["ScriptSource"]  # Cache this too
 
                 for plugin in plugin_list:
@@ -183,7 +185,6 @@ def control_pages():
                 # Search for embedded scripts with plugin references (saved as control page actions). Will match one or
                 # more plugin references in the target script.
                 elif (ag.get("Class", None) == 101) and (ag.get("ScriptType", None) == 0):
-                    plugin_list = indigo.server.getPluginList(includeDisabled=True)
                     script_source = ag["ScriptSource"]  # Cache this too
 
                     for plugin in plugin_list:
@@ -256,7 +257,6 @@ def triggers():
                 # Search for embedded scripts with plugin references (saved as actions). Will match one or more plugin
                 # references in the target script.
                 elif (action.get("Class", None) == 101) and (action.get("ScriptType", None) == 0):
-                    plugin_list = indigo.server.getPluginList(includeDisabled=True)
                     script_source = action["ScriptSource"]  # Cache this too
 
                     for plugin in plugin_list:
@@ -264,6 +264,18 @@ def triggers():
                         if plugin_id in script_source and plugin_id not in skip_list:
                             add_to_inventory(plugin.pluginId, "trigger_actions", {
                                 'id': trig["ID"], "description": f"embedded script"})
+
+        # Inspect trigger conditions for plugin references
+        if trig['Condition'].get("ScriptType", None) == 0 and trig['Condition'].get("ScriptSource", None):
+            script_source = trig["Condition"]["ScriptSource"]
+
+            for plugin in plugin_list:
+                plugin_id = plugin.pluginId  # Single attribute lookup
+                if plugin_id in script_source and plugin_id not in skip_list:
+                    add_to_inventory(plugin.pluginId,
+                                     "triggers",
+                                     {"id": trig["ID"], "description": f"trigger condition"},
+                                     )
 
 
 # Assemble the data
