@@ -238,6 +238,17 @@ def schedules():
             if action.get("PluginID", None) not in skip_list:
                 add_to_inventory(action["PluginID"], "schedules", {'id': sched["ID"]})
 
+        # Inspect trigger conditions for plugin references
+        if sched['Condition'].get("ScriptType", None) == 0 and sched['Condition'].get("ScriptSource", None):
+            script_source = sched["Condition"]["ScriptSource"]
+
+            for plugin in plugin_list:
+                plugin_id = plugin.pluginId  # Single attribute lookup
+                if plugin_id in script_source and plugin_id not in skip_list:
+                    add_to_inventory(plugin.pluginId,
+                                     "schedules",
+                                     {"id": sched["ID"], "description": f"schedule condition"},
+                                     )
 
 # =============================================================================
 def triggers():
