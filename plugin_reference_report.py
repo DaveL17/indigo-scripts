@@ -6,7 +6,6 @@ Generates a list of Indigo objects that "belong" to plugins.
 
 If a plugin is reported with the name `- plugin not installed -`, look for broken Action items. When you open the
 Action, it will be Type: Action Not Found.
-TODO: Search plugin strings in embedded scripts in Actions, Triggers
 TODO: [maybe] Search/Grep conditionals, too
 TODO: Needs robust error handling
 TODO: Needs unit testing
@@ -17,8 +16,8 @@ import indigo  # noqa
 __version__ = "0.1.11"
 _plugin_cache = {}
 
-# Initialize an inventory dictionary with default empty collections.
-# It uses sets so only one instance of a value is ever tracked.
+# Initialize an inventory dictionary with default empty collections. It uses sets so only one instance of a value is
+# ever tracked.
 inventory = defaultdict(
     lambda: {
         "action_groups": [],
@@ -52,6 +51,10 @@ skip_list = {
     "",  # if a pluginId is empty (i.e., X-10), we don't care about it.
     None
 }
+
+
+def add_to_inventory(plugin_id: str, category: str, details: dict):
+    inventory[plugin_id][category].append(details)
 
 
 # =============================================================================
@@ -97,7 +100,7 @@ def generate_report():
 
                 for item_name, item_id in sorted_items:
                     if 'description' in item_id:
-                        report += f"\n    {item_name}  [{item_id['id']}  {item_id['description']}]"
+                        report += f"\n    {item_name}  [{item_id['id']}] - {item_id['description']}"
                     else:
                         report += f"\n    {item_name}  [{item_id['id']}]"
 
@@ -125,19 +128,16 @@ def get_object_name(obj):
 def get_plugin_name(plugin_id: str) -> str:
     """Get plugin display name with caching."""
     if plugin_id not in _plugin_cache:
-        # First time seeing this plugin - look it up and store it. Indigo will
-        # handle instances where `plugin_id` refers to a plugin that doesn't
-        # exist in the current environment.
+        # First time seeing this plugin - look it up and store it. Indigo will handle instances where `plugin_id`
+        # refers to a plugin that doesn't exist in the current environment.
         try:
             plugin = indigo.server.getPlugin(plugin_id)
             plugin_name = plugin.pluginDisplayName
         except TypeError:
-            # This is meant to apply to things that don't have a plugin_id if we
-            # haven't already skipped them.
+            # This is meant to apply to things that don't have a plugin_id if we haven't already skipped them.
             plugin_name = "- plugin not installed -"
 
-        # This looks duplicative of the next `if`, but it's not. Indigo can also
-        # return this plugin name string.
+        # This looks duplicative of the next `if`, but it's not. Indigo can also return this plugin name string.
         if plugin_name == "- plugin not installed -":
             plugin_name = f"Plugin not Installed"
         _plugin_cache[plugin_id] = plugin_name
@@ -151,13 +151,10 @@ def action_groups():
     for action_group in indigo.rawServerRequest("GetActionGroupList"):
         for action in action_group['ActionSteps']:
             if action.get('PluginID', None) not in skip_list:
-                inventory[action["PluginID"]]["action_groups"].append(
-                    {'id': action_group["ID"], }
-                )
+                add_to_inventory(action["PluginID"], "action_groups", {'id': action_group["ID"]})
 
-            # Search for embedded scripts with plugin references (saved as
-            # actions). Will match one or more plugin references in the target
-            # script.
+            # Search for embedded scripts with plugin references (saved as actions). Will match one or more plugin
+            # references in the target script.
             elif (action.get("Class", None) == 101) and (action.get("ScriptType", None) == 0):
                 plugin_list = indigo.server.getPluginList(includeDisabled=True)
                 script_source = action["ScriptSource"]  # Cache this too
@@ -165,11 +162,9 @@ def action_groups():
                 for plugin in plugin_list:
                     plugin_id = plugin.pluginId  # Single attribute lookup
                     if plugin_id in script_source and plugin_id not in skip_list:
-                        inventory[plugin.pluginId]["action_groups"].append(
-                            {'id': action_group["ID"],
-                             "description": f"embedded script matched: {plugin_id}",
-                             }
-                        )
+                        add_to_inventory(plugin.pluginId, "action_groups", {
+                            'id': action_group["ID"], "description": f"embedded script"})
+
 
 # =============================================================================
 def control_pages():
@@ -182,14 +177,11 @@ def control_pages():
         for action in control_page["PageElemList"]:
             for ag in action["ActionGroup"]["ActionSteps"]:
                 if ag.get("PluginID", None) not in skip_list:
-                    inventory[ag["PluginID"]]["control_pages"].append(
-                        {'id': control_page["ID"],
-                         'description': "built-in control",
-                         }
-                    )
+                    add_to_inventory(ag["PluginID"], "control_pages", {
+                        'id': control_page["ID"], 'description': "built-in control"})
 
-                # Search for embedded scripts with plugin references (saved as control page actions).
-                # Will match one or more plugin references in the target script.
+                # Search for embedded scripts with plugin references (saved as control page actions). Will match one or
+                # more plugin references in the target script.
                 elif (ag.get("Class", None) == 101) and (ag.get("ScriptType", None) == 0):
                     plugin_list = indigo.server.getPluginList(includeDisabled=True)
                     script_source = ag["ScriptSource"]  # Cache this too
@@ -197,15 +189,11 @@ def control_pages():
                     for plugin in plugin_list:
                         plugin_id = plugin.pluginId  # Single attribute lookup
                         if plugin_id in script_source and plugin_id not in skip_list:
-                            inventory[plugin_id]["control_pages"].append(
-                                {"id": control_page["ID"],
-                                 "description": f"embedded script matched: {plugin_id}",
-                                 }
-                            )
+                            add_to_inventory(plugin_id, "control_pages", {
+                                "id": control_page["ID"], "description": f"embedded script"})
 
-            # Get plugin devices and triggers that are referenced by built-in
-            # controls. For example, Client Action -> Popup Controls
-            # These don't have a `ServerIndex` because they aren't "on the page".
+            # Get plugin devices and triggers that are referenced by built-in controls. For example,
+            # Client Action -> Popup Controls. These don't have a `ServerIndex` because they aren't "on the page".
             obj = None
             if action.get('TargetElemID', None):
                 elem_id = action["TargetElemID"]
@@ -223,14 +211,14 @@ def control_pages():
                 else:
                     pass
 
-                # Check to see if the discovered object has a pluginId attribute.
-                # If it does, add the object id to the inventory.
+                # Check to see if the discovered object has a pluginId attribute. If it does, add the object id to the
+                # inventory.
                 if hasattr(obj, 'pluginId'):
                     if obj.pluginId not in skip_list:
-                        inventory[obj.pluginId]["control_pages"].append(
-                            {'id': control_page["ID"],
-                             'description': f"Control #{action['ServerIndex']}", }
-                        )
+                        add_to_inventory(obj.pluginId, "control_pages", {
+                            'id': control_page["ID"],
+                            'description': f"Control #{action['ServerIndex']}"
+                        })
 
 
 # =============================================================================
@@ -238,9 +226,7 @@ def devices():
     """List the devices of type plugin"""
     for dev in indigo.rawServerRequest("GetDeviceList"):
         if dev.get("PluginID", None) not in skip_list:
-            inventory[dev["PluginID"]]["devices"].append(
-                {'id': dev["ID"], }
-            )
+            add_to_inventory(dev["PluginID"], "devices", {'id': dev["ID"]})
 
 
 # =============================================================================
@@ -249,9 +235,7 @@ def schedules():
     for sched in indigo.rawServerRequest("GetEventScheduleList"):
         for action in sched["ActionGroup"]["ActionSteps"]:
             if action.get("PluginID", None) not in skip_list:
-                inventory[action["PluginID"]]["schedules"].append(
-                    {'id': sched["ID"], }
-                )
+                add_to_inventory(action["PluginID"], "schedules", {'id': sched["ID"]})
 
 
 # =============================================================================
@@ -261,21 +245,16 @@ def triggers():
     for trig in indigo.rawServerRequest("GetEventTriggerList"):
         # Plugin Triggers
         if trig.get("PluginID", None) not in skip_list:
-            inventory[trig["PluginID"]]["triggers"].append(
-                {'id': trig["ID"]}
-            )
+            add_to_inventory(trig["PluginID"], "triggers", {'id': trig["ID"]})
 
         # Trigger actions (from both plugin triggers and built-in triggers)
         if trig.get("ActionGroup", None):
             for action in trig["ActionGroup"]["ActionSteps"]:
                 if action.get("PluginID", None) not in skip_list:
-                    inventory[action["PluginID"]]["trigger_actions"].append(
-                        {'id': trig["ID"], }
-                    )
+                    add_to_inventory(action["PluginID"], "trigger_actions", {'id': trig["ID"]})
 
-                # Search for embedded scripts with plugin references (saved as
-                # actions). Will match one or more plugin references in the target
-                # script.
+                # Search for embedded scripts with plugin references (saved as actions). Will match one or more plugin
+                # references in the target script.
                 elif (action.get("Class", None) == 101) and (action.get("ScriptType", None) == 0):
                     plugin_list = indigo.server.getPluginList(includeDisabled=True)
                     script_source = action["ScriptSource"]  # Cache this too
@@ -283,11 +262,9 @@ def triggers():
                     for plugin in plugin_list:
                         plugin_id = plugin.pluginId  # Single attribute lookup
                         if plugin_id in script_source and plugin_id not in skip_list:
-                            inventory[plugin.pluginId]["trigger_actions"].append(
-                                {'id': trig["ID"],
-                                 "description": f"embedded script matched: {plugin_id}",
-                                 }
-                            )
+                            add_to_inventory(plugin.pluginId, "trigger_actions", {
+                                'id': trig["ID"], "description": f"embedded script"})
+
 
 # Assemble the data
 action_groups()
