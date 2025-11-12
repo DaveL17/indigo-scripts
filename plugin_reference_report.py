@@ -180,7 +180,7 @@ def control_pages():
             for ag in action["ActionGroup"]["ActionSteps"]:
                 if ag.get("PluginID", None) not in skip_list:
                     add_to_inventory(ag["PluginID"], "control_pages", {
-                        'id': control_page["ID"], 'description': "built-in control"})
+                        'id': control_page["ID"], 'description': f"built-in control Z-#{action['ServerIndex']}"})
 
                 # Search for embedded scripts with plugin references (saved as control page actions). Will match one or
                 # more plugin references in the target script.
@@ -191,7 +191,7 @@ def control_pages():
                         plugin_id = plugin.pluginId  # Single attribute lookup
                         if plugin_id in script_source and plugin_id not in skip_list:
                             add_to_inventory(plugin_id, "control_pages", {
-                                "id": control_page["ID"], "description": f"embedded script"})
+                                "id": control_page["ID"], "description": f"embedded script control Z-#{action['ServerIndex']}"})
 
             # Get plugin devices and triggers that are referenced by built-in controls. For example,
             # Client Action -> Popup Controls. These don't have a `ServerIndex` because they aren't "on the page".
@@ -218,7 +218,7 @@ def control_pages():
                     if obj.pluginId not in skip_list:
                         add_to_inventory(obj.pluginId, "control_pages", {
                             'id': control_page["ID"],
-                            'description': f"Control #{action['ServerIndex']}"
+                            'description': f"Control Z-#{action['ServerIndex']}"
                         })
 
 
