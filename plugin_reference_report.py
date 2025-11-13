@@ -12,7 +12,7 @@ TODO: Needs unit testing
 from collections import defaultdict
 import indigo  # noqa
 
-__version__ = "0.1.15"
+__version__ = "0.1.17"
 _plugin_cache = {}
 
 # Initialize an inventory dictionary with default empty collections. It uses lists so there can be multiple entries for
@@ -28,6 +28,7 @@ inventory = defaultdict(
     }
 )
 
+# Used to populate inventory key lookups.
 CATEGORIES = [
     "action_groups",
     "control_pages",
@@ -36,6 +37,7 @@ CATEGORIES = [
     "triggers",
     "trigger_actions",
 ]
+
 # Used to look up object IDs to determine object types
 OBJ_TYPES = (
     indigo.actionGroups,
@@ -216,9 +218,7 @@ def control_pages():
                 if hasattr(obj, 'pluginId'):
                     if obj.pluginId not in SKIP_LIST:
                         add_to_inventory(obj.pluginId, "control_pages", {
-                            'id': control_page["ID"],
-                            'description': f"Control Z-{action['ServerIndex']}"
-                        })
+                            'id': control_page["ID"], 'description': f"Control Z-{action['ServerIndex']}"})
 
 
 # =============================================================================
@@ -241,17 +241,18 @@ def schedules():
         if sched['Condition'].get("ScriptType", None) == 0 and sched['Condition'].get("ScriptSource", None):
 
             for plugin in plugin_list:
-                plugin_id = plugin.pluginId  # Single attribute lookup
+                plugin_id = plugin.pluginId
                 if plugin_id in sched["Condition"]["ScriptSource"] and plugin_id not in SKIP_LIST:
-                    add_to_inventory(plugin.pluginId,
-                                     "schedules",
-                                     {"id": sched["ID"], "description": f"schedule condition"},
-                                     )
+                    add_to_inventory(plugin.pluginId, "schedules",
+                                     {"id": sched["ID"], "description": f"schedule condition"})
+
 
 # =============================================================================
 def triggers():
-    """List the triggers of type plugin. Triggers can be associated with
-    plugins and also execute plugin actions -- even those of other plugins."""
+    """
+    List the triggers of type plugin. Triggers can be associated with plugins and also execute plugin actions -- even
+    those of other plugins.
+    """
     for trig in indigo.rawServerRequest("GetEventTriggerList"):
         # Plugin Triggers
         if trig.get("PluginID", None) not in SKIP_LIST:
@@ -268,21 +269,18 @@ def triggers():
                 elif (action.get("Class", None) == 101) and (action.get("ScriptType", None) == 0):
 
                     for plugin in plugin_list:
-                        plugin_id = plugin.pluginId  # Single attribute lookup
+                        plugin_id = plugin.pluginId
                         if plugin_id in action["ScriptSource"] and plugin_id not in SKIP_LIST:
                             add_to_inventory(plugin.pluginId, "trigger_actions", {
                                 'id': trig["ID"], "description": f"embedded script"})
 
         # Inspect trigger conditions for plugin references
         if trig['Condition'].get("ScriptType", None) == 0 and trig['Condition'].get("ScriptSource", None):
-
             for plugin in plugin_list:
-                plugin_id = plugin.pluginId  # Single attribute lookup
+                plugin_id = plugin.pluginId
                 if plugin_id in trig["Condition"]["ScriptSource"] and plugin_id not in SKIP_LIST:
-                    add_to_inventory(plugin.pluginId,
-                                     "triggers",
-                                     {"id": trig["ID"], "description": f"trigger condition"},
-                                     )
+                    add_to_inventory(plugin.pluginId, "triggers",
+                                     {"id": trig["ID"], "description": f"trigger condition"})
 
 
 # Assemble the data
