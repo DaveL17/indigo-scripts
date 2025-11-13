@@ -118,7 +118,14 @@ def generate_report():
 
 # =============================================================================
 def get_object_name(obj):
-    """Get the object's name."""
+    """
+    Get the object's name.
+
+    There is a small but possible chance that an ID may be used by more than one object type. In this case, the script
+    is going to go with the first object/ID match. If no match is found, "Name unavailable" will be returned.
+
+    TODO: could check all object types and report all matches (if there's more than one).
+    """
     obj_id = obj['id']
     try:
         for collection in OBJ_TYPES:
@@ -206,7 +213,8 @@ def control_pages():
                 elif elem_id in indigo.actionGroups:
                     obj = indigo.actionGroups[elem_id]
                 # TargetElemID is a trigger
-                # FIXME: I'm not sure this is a necessary test -- can you fire a trigger from a CP?
+                # FIXME: I'm not sure this is a necessary test -- can you fire a trigger from a CP? From an embedded
+                #        script perhaps?
                 elif elem_id in indigo.triggers:
                     obj = indigo.triggers[elem_id]
                 # TargetElemID is something else
