@@ -12,7 +12,7 @@ TODO: Needs unit testing
 from collections import defaultdict
 import indigo  # noqa
 
-__version__ = "0.1.17"
+__version__ = "0.1.18"
 _plugin_cache = {}
 
 # Initialize an inventory dictionary with default empty collections. It uses lists so there can be multiple entries for
