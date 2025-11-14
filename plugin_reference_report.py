@@ -10,10 +10,13 @@ TODO: Needs robust error handling
 TODO: Needs unit testing
 """
 from collections import defaultdict
+from datetime import datetime
 import indigo  # noqa
 
-__version__ = "0.1.18"
+__version__ = "0.1.19"
 _plugin_cache = {}
+_print_to_file = True
+_path_to_print = indigo.server.getInstallFolderPath() + "/logs/"
 
 # Initialize an inventory dictionary with default empty collections. It uses lists so there can be multiple entries for
 # a single entry. For example, a control page may reference the same plugin device multiple times for different states.
@@ -115,6 +118,9 @@ def generate_report():
     report += "\n=== End of Report ==="
     indigo.server.log(report)
 
+    if _print_to_file:
+        with open(f"{_path_to_print}plugin_reference_report_{datetime.now():%Y-%m-%d %H_%M_%S}.txt", "w") as file:
+            file.write(report)
 
 # =============================================================================
 def get_object_name(obj):
