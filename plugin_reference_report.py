@@ -71,7 +71,7 @@ SKIP_LIST = {
 # Validate output toggles
 # =============================================================================
 if not _print_to_event_log and not _print_to_file:
-    indigo.server.log(f"You must direct report output to either the log or to a file.", isError=True)
+    indigo.server.log(f"You must direct the report's output to either the log or to a file.", isError=True)
     sys.exit(1)
 
 
