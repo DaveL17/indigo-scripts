@@ -16,7 +16,7 @@ import sys
 
 __version__ = "0.1.19"
 _plugin_cache = {}
-_print_to_event_log = False
+_print_to_event_log = True
 _print_to_file = False
 _path_to_print = indigo.server.getInstallFolderPath() + "/logs/"
 
