@@ -183,10 +183,17 @@ def action_groups():
             if action.get('PluginID', None) not in SKIP_LIST:
                 add_to_inventory(action["PluginID"], "action_groups", {'id': action_group["ID"]})
 
+            # Make exceptions for certain instances where a built-in action references a plugin or its resources.
+            # For example, a restart plugin action will be listed under the plugin section (unless that is also in
+            # the skip list.
+            elif action.get('PluginID', None) == "com.perceptiveautomation.indigoplugin.ActionCollection":
+                target_action = action['MetaProps']['com.perceptiveautomation.indigoplugin.ActionCollection'].get('pluginId', None)
+                if target_action not in SKIP_LIST:
+                    add_to_inventory(action["PluginID"], "action_groups", {"id": action_group["ID"]})
+
             # Search for embedded scripts with plugin references (saved as actions). Will match one or more plugin
             # references in the target script.
             elif (action.get("Class", None) == 101) and (action.get("ScriptType", None) == 0):
-
                 for plugin in plugin_list:
                     plugin_id = plugin.pluginId  # Single attribute lookup
                     if plugin_id in action["ScriptSource"] and plugin_id not in SKIP_LIST:
