@@ -12,10 +12,12 @@ TODO: Needs unit testing
 from collections import defaultdict
 from datetime import datetime
 import indigo  # noqa
+import sys
 
 __version__ = "0.1.19"
 _plugin_cache = {}
-_print_to_file = True
+_print_to_event_log = False
+_print_to_file = False
 _path_to_print = indigo.server.getInstallFolderPath() + "/logs/"
 
 # Initialize an inventory dictionary with default empty collections. It uses lists so there can be multiple entries for
@@ -65,6 +67,12 @@ SKIP_LIST = {
     "",  # if a pluginId is empty (i.e., X-10), we don't care about it.
     None
 }
+
+# Validate output toggles
+# =============================================================================
+if not _print_to_event_log and not _print_to_file:
+    indigo.server.log(f"You must direct report output to either the log or to a file.", isError=True)
+    sys.exit(1)
 
 
 # =============================================================================
@@ -116,11 +124,14 @@ def generate_report():
         report += "\n"
 
     report += "\n=== End of Report ==="
-    indigo.server.log(report)
+
+    if _print_to_event_log:
+        indigo.server.log(report)
 
     if _print_to_file:
         with open(f"{_path_to_print}plugin_reference_report_{datetime.now():%Y-%m-%d %H_%M_%S}.txt", "w") as file:
             file.write(report)
+        indigo.server.log("Report generated")
 
 # =============================================================================
 def get_object_name(obj):
