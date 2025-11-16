@@ -16,8 +16,8 @@ import sys
 
 __version__ = "0.1.20"
 _plugin_cache = {}
-_print_to_event_log = False
-_print_to_file = True
+_print_to_event_log = True
+_print_to_file = False
 _path_to_print = indigo.server.getInstallFolderPath() + "/logs/"
 
 # Initialize an inventory dictionary with default empty collections. It uses lists so there can be multiple entries for
