@@ -14,7 +14,7 @@ from datetime import datetime
 import indigo  # noqa
 import sys
 
-__version__ = "0.1.19"
+__version__ = "0.1.20"
 _plugin_cache = {}
 _print_to_event_log = True
 _print_to_file = False
@@ -68,6 +68,7 @@ SKIP_LIST = {
     None
 }
 
+
 # Validate output toggles
 # =============================================================================
 if not _print_to_event_log and not _print_to_file:
@@ -89,15 +90,15 @@ def generate_report():
 
     # Sort plugins case-insensitively
     sorted_plugins = sorted(
-        [(name, get_plugin_name(name), data) for name, data in inventory.items()], key=lambda p: p[1].lower()
+        [(plugin_id, get_plugin_name(plugin_id), data) for plugin_id, data in inventory.items()], key=lambda p: p[1].lower()
     )
 
     # The inventory is empty
     if len(sorted_plugins) == 0:
         report += f"\nNo plugins installed."
 
-    for name, plugin_name, categories in sorted_plugins:
-        report += f"\n{separator}\n{plugin_name} [{name}]\n{separator}"
+    for plugin_id, plugin_name, categories in sorted_plugins:
+        report += f"\n{separator}\n{plugin_name} [{plugin_id}]\n{separator}"
 
         # Process each category
         for category_key in CATEGORIES:
@@ -115,11 +116,30 @@ def generate_report():
                     [(get_object_name(item_id), item_id) for item_id in items], key=lambda item: item[0].lower()
                 )
 
+                # In some instances, an entry can appear more than once with no ability to distinguish them. For
+                # example, a single action group may call a plugin action multiple times. This results in the same
+                # output being repeated--which is awkward. Instead, we count the number of recurrences and summarize
+                # for the report.
+                item_counts = {}
                 for item_name, item_id in sorted_items:
-                    if 'description' in item_id:
-                        report += f"\n    {item_name} | {item_id['id']} | {item_id['description']}"
-                    else:
-                        report += f"\n    {item_name} | {item_id['id']}"
+                    key = (item_name, item_id["id"], item_id.get("description", ""))
+                    item_counts[key] = item_counts.get(key, 0) + 1
+
+                for item_name, item_id in sorted_items:
+                    key = (item_name, item_id["id"], item_id.get("description", ""))
+                    if key in item_counts:
+                        count_str = (f" | {item_counts[key]} references" if item_counts[key] > 1 else "")
+                        if "description" in item_id:
+                            report += f"\n    {item_name} | {item_id['id']} | {item_id['description']}{count_str}"
+                        else:
+                            report += f"\n    {item_name} | {item_id['id']}{count_str}"
+                        del item_counts[key]  # Remove to avoid printing duplicates
+
+                # for item_name, item_id in sorted_items:
+                #     if 'description' in item_id:
+                #         report += f"\n    {item_name} | {item_id['id']} | {item_id['description']}"
+                #     else:
+                #         report += f"\n    {item_name} | {item_id['id']}"
 
         report += "\n"
 
@@ -132,6 +152,7 @@ def generate_report():
         with open(f"{_path_to_print}plugin_reference_report_{datetime.now():%Y-%m-%d_%H-%M-%S}.txt", "w") as file:
             file.write(report)
         indigo.server.log("Report generated")
+
 
 # =============================================================================
 def get_object_name(obj):
@@ -185,7 +206,7 @@ def action_groups():
 
             # Make exceptions for certain instances where a built-in action references a plugin or its resources.
             # For example, a restart plugin action will be listed under the plugin section (unless that is also in
-            # the skip list.
+            # the skip list).
             elif action.get('PluginID', None) == "com.perceptiveautomation.indigoplugin.ActionCollection":
                 target_action = action['MetaProps']['com.perceptiveautomation.indigoplugin.ActionCollection'].get('pluginId', None)
                 if target_action not in SKIP_LIST:
@@ -218,7 +239,6 @@ def control_pages():
                 # Search for embedded scripts with plugin references (saved as control page actions). Will match one or
                 # more plugin references in the target script.
                 elif (ag.get("Class", None) == 101) and (ag.get("ScriptType", None) == 0):
-
                     for plugin in plugin_list:
                         plugin_id = plugin.pluginId  # Single attribute lookup
                         if plugin_id in ag["ScriptSource"] and plugin_id not in SKIP_LIST:
