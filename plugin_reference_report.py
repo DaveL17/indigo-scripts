@@ -16,8 +16,8 @@ import sys
 
 __version__ = "0.1.20"
 _plugin_cache = {}
-_print_to_event_log = True
-_print_to_file = False
+_print_to_event_log = False
+_print_to_file = True
 _path_to_print = indigo.server.getInstallFolderPath() + "/logs/"
 
 # Initialize an inventory dictionary with default empty collections. It uses lists so there can be multiple entries for
@@ -149,7 +149,7 @@ def generate_report():
         indigo.server.log(report)
 
     if _print_to_file:
-        with open(f"{_path_to_print}plugin_reference_report_{datetime.now():%Y-%m-%d_%H-%M-%S}.txt", "w") as file:
+        with open(f"{_path_to_print}plugin_reference_report_{datetime.now():%Y-%m-%d_%H-%M-%S}.txt", "w", encoding="utf-8") as file:
             file.write(report)
         indigo.server.log("Report generated")
 
