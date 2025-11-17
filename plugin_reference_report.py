@@ -14,7 +14,7 @@ from datetime import datetime
 import indigo  # noqa
 import sys
 
-__version__ = "0.1.20"
+__version__ = "0.1.21"
 _plugin_cache = {}
 _print_to_event_log = True
 _print_to_file = False
@@ -135,12 +135,6 @@ def generate_report():
                             report += f"\n    {item_name} | {item_id['id']}{count_str}"
                         del item_counts[key]  # Remove to avoid printing duplicates
 
-                # for item_name, item_id in sorted_items:
-                #     if 'description' in item_id:
-                #         report += f"\n    {item_name} | {item_id['id']} | {item_id['description']}"
-                #     else:
-                #         report += f"\n    {item_name} | {item_id['id']}"
-
         report += "\n"
 
     report += "\n=== End of Report ==="
@@ -210,7 +204,7 @@ def action_groups():
             elif action.get('PluginID', None) == "com.perceptiveautomation.indigoplugin.ActionCollection":
                 target_action = action['MetaProps']['com.perceptiveautomation.indigoplugin.ActionCollection'].get('pluginId', None)
                 if target_action not in SKIP_LIST:
-                    add_to_inventory(action["PluginID"], "action_groups", {"id": action_group["ID"]})
+                    add_to_inventory(target_action, "action_groups", {"id": action_group["ID"]})
 
             # Search for embedded scripts with plugin references (saved as actions). Will match one or more plugin
             # references in the target script.
